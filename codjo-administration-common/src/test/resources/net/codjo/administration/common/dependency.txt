@@ -1,0 +1,3 @@
+net.codjo.administration.common
+	-> com.thoughtworks.xstream
+	-> com.thoughtworks.xstream.io.xml

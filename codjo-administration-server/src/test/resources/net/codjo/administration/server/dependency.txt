@@ -1,0 +1,54 @@
+net.codjo.administration.server.audit.mad
+	-> net.codjo.administration.server.audit
+	-> net.codjo.agent
+	-> net.codjo.mad.server
+	-> net.codjo.mad.server.handler
+	-> net.codjo.mad.server.util
+	-> net.codjo.security.common.api
+	-> net.codjo.sql.spy
+	-> org.exolab.castor.jdo
+
+net.codjo.administration.server.audit.memory
+	-> net.codjo.agent
+	-> net.codjo.agent.behaviour
+
+net.codjo.administration.server.operation.systemProperties
+	-> net.codjo.administration.common
+	-> net.codjo.agent
+	-> net.codjo.agent.protocol
+
+net.codjo.administration.server.operation.configuration
+    -> net.codjo.administration.common
+    -> net.codjo.administration.server.audit
+    -> net.codjo.administration.server.audit.mad
+    -> net.codjo.administration.server.audit.memory
+    -> net.codjo.administration.server.operation.log
+    -> net.codjo.agent
+    -> net.codjo.agent.behaviour
+    -> net.codjo.agent.protocol
+    -> net.codjo.mad.server.handler
+    -> net.codjo.mad.server.plugin
+    		
+net.codjo.administration.server.operation.log
+	-> net.codjo.administration.common
+	-> net.codjo.agent
+	-> net.codjo.agent.protocol
+	-> net.codjo.util.file
+
+net.codjo.administration.server.operation.plugin
+	-> net.codjo.administration.common
+	-> net.codjo.agent
+	-> net.codjo.agent.protocol
+	-> net.codjo.plugin.common
+	-> net.codjo.plugin.server
+
+net.codjo.administration.server.plugin
+	-> net.codjo.administration.server.audit
+	-> net.codjo.administration.server.audit.memory
+    -> net.codjo.administration.server.operation.configuration
+	-> net.codjo.administration.server.operation.log
+	-> net.codjo.administration.server.operation.plugin
+    -> net.codjo.administration.server.operation.systemProperties
+	-> net.codjo.agent
+	-> net.codjo.mad.server.plugin
+	-> net.codjo.plugin.server

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="net.codjo.administration.gui.plugin.ConfigurationPanel">
+  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="6" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="10" vgap="10">
+    <margin top="10" left="20" bottom="10" right="10"/>
+    <constraints>
+      <xy x="20" y="20" width="800" height="400"/>
+    </constraints>
+    <properties>
+      <preferredSize width="-1" height="-1"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <vspacer id="8eb88">
+        <constraints>
+          <grid row="4" column="0" row-span="2" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+            <preferred-size width="11" height="87"/>
+          </grid>
+        </constraints>
+      </vspacer>
+      <component id="f48fd" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Audit des handlers"/>
+        </properties>
+      </component>
+      <component id="95d21" class="javax.swing.JButton" binding="recordHandlerStatisticsButton">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <alignmentY value="0.0"/>
+          <borderPainted value="true"/>
+          <focusPainted value="true"/>
+          <iconTextGap value="0"/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value=""/>
+          <opaque value="true"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <hspacer id="14898">
+        <constraints>
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <minimum-size width="20" height="-1"/>
+          </grid>
+        </constraints>
+      </hspacer>
+      <component id="7081f" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Audit de l'utilisation de la mémoire"/>
+        </properties>
+      </component>
+      <component id="4fc20" class="javax.swing.JButton" binding="recordMemoryUsageButton">
+        <constraints>
+          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="true"/>
+          <focusPainted value="true"/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value=""/>
+          <requestFocusEnabled value="true"/>
+          <rolloverEnabled value="true"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="e7598" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Répertoire de log"/>
+        </properties>
+      </component>
+      <component id="18c0c" class="javax.swing.JTextField" binding="directoryLog">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <enabled value="true"/>
+          <name value=""/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="9b8ea" class="javax.swing.JButton" binding="applyButton">
+        <constraints>
+          <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="false"/>
+          <label value=""/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="apply"/>
+          <text value=""/>
+          <toolTipText value="Appliquer"/>
+        </properties>
+      </component>
+      <component id="1517" class="javax.swing.JButton" binding="resetButton">
+        <constraints>
+          <grid row="1" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="true"/>
+          <inheritsPopupMenu value="false"/>
+          <label value=""/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="reset"/>
+          <text value=""/>
+          <toolTipText value="Recharger la configuration statique"/>
+        </properties>
+      </component>
+      <component id="18cc9" class="javax.swing.JButton" binding="undoButton">
+        <constraints>
+          <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="true"/>
+          <enabled value="false"/>
+          <focusPainted value="true"/>
+          <inheritsPopupMenu value="false"/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="undo"/>
+          <requestFocusEnabled value="true"/>
+          <rolloverEnabled value="true"/>
+          <text value=""/>
+          <toolTipText value="Annuler la saisie"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

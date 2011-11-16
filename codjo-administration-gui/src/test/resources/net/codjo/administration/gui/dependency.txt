@@ -1,0 +1,15 @@
+net.codjo.administration.gui.plugin
+	-> net.codjo.administration.common
+	-> net.codjo.agent
+	-> net.codjo.agent.behaviour
+	-> net.codjo.agent.protocol
+	-> net.codjo.gui.toolkit
+	-> net.codjo.gui.toolkit.util
+	-> net.codjo.gui.toolkit.waiting
+	-> net.codjo.i18n.common
+	-> net.codjo.mad.gui.base
+	-> net.codjo.mad.gui.framework
+	-> net.codjo.mad.gui.i18n
+	-> net.codjo.plugin.common
+	-> net.codjo.plugin.gui
+	-> net.codjo.security.common.api

@@ -1,0 +1,11 @@
+net.codjo.administration.gui
+
+net.codjo.administration.gui.plugin
+	-> net.codjo.agent
+	-> net.codjo.agent.test
+	-> net.codjo.gui.toolkit.waiting
+	-> net.codjo.mad.gui.framework
+	-> net.codjo.security.common.api
+	-> net.codjo.test.common
+	-> org.uispec4j
+	-> org.uispec4j.interception

@@ -1,0 +1,2 @@
+net.codjo.administration.common
+	-> net.codjo.test.common

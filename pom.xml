@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+     | POM Relationships
+     -->
+
+    <parent>
+        <groupId>net.codjo.pom</groupId>
+        <artifactId>codjo-pom-library</artifactId>
+        <version>SNAPSHOT</version>
+    </parent>
+    <groupId>net.codjo.administration</groupId>
+    <artifactId>codjo-administration</artifactId>
+    <version>0.15-SNAPSHOT</version>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>net.codjo.administration</groupId>
+                <artifactId>codjo-administration-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!--
+     | Build Settings
+     -->
+
+    <packaging>pom</packaging>
+    <modules>
+        <module>codjo-administration-common</module>
+        <module>codjo-administration-server</module>
+        <module>codjo-administration-gui</module>
+    </modules>
+
+    <!--
+    | Project Information
+    -->
+
+    <name>Lib &gt; Administration</name>
+    <description>Librairie permettant de gerer les serveurs applicatifs</description>
+    <inceptionYear>2009</inceptionYear>
+
+    <!--
+    | Environment Information
+    -->
+
+    <scm>
+        <connection>scm:git:https://github.com/codjo/codjo-administration.git</connection>
+        <developerConnection>scm:git:https://github.com/codjo/codjo-administration.git</developerConnection>
+        <url>https://github.com/codjo/codjo-administration</url>
+    </scm>
+
+</project>
