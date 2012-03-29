@@ -9,3 +9,4 @@ net.codjo.administration.gui.plugin
 	-> net.codjo.test.common
 	-> org.uispec4j
 	-> org.uispec4j.interception
+	-> net.codjo.gui.toolkit.i18n

@@ -1,5 +1,6 @@
 package net.codjo.administration.gui.plugin;
 import net.codjo.agent.AgentContainerMock;
+import net.codjo.gui.toolkit.i18n.InternationalizationTestUtil;
 import net.codjo.mad.gui.framework.DefaultGuiContext;
 import net.codjo.security.common.api.UserMock;
 import net.codjo.test.common.LogString;
@@ -31,6 +32,8 @@ public class AdministrationActionTest extends UISpecTestCase {
 
 
     public void test_security_notAllowed() {
+        InternationalizationTestUtil.initErrorDialogTranslationBackpack();
+
         DefaultGuiContext guiContext = new DefaultGuiContext();
         guiContext.setUser(new UserMock());
         administrationAction = new AdministrationAction(guiContext, new AgentContainerMock(log));

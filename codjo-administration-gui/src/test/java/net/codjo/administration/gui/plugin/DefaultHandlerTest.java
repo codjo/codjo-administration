@@ -1,8 +1,9 @@
 package net.codjo.administration.gui.plugin;
-import net.codjo.mad.gui.framework.DefaultGuiContext;
-import net.codjo.test.common.LogString;
 import java.util.Arrays;
 import javax.swing.JDesktopPane;
+import net.codjo.gui.toolkit.i18n.InternationalizationTestUtil;
+import net.codjo.mad.gui.framework.DefaultGuiContext;
+import net.codjo.test.common.LogString;
 import org.uispec4j.Trigger;
 import org.uispec4j.UISpecTestCase;
 import org.uispec4j.Window;
@@ -50,6 +51,7 @@ public class DefaultHandlerTest extends UISpecTestCase {
 
 
     public void test_handleCommunicationError() throws Exception {
+        InternationalizationTestUtil.initErrorDialogTranslationBackpack();
         WindowInterceptor
               .init(new Trigger() {
                   public void run() throws Exception {
@@ -193,7 +195,7 @@ public class DefaultHandlerTest extends UISpecTestCase {
 
         @Override
         public void initPlugins(String... plugins) {
-            log.call("initPlugins", (Object[]) plugins);
+            log.call("initPlugins", (Object[])plugins);
         }
 
 
@@ -211,7 +213,7 @@ public class DefaultHandlerTest extends UISpecTestCase {
 
         @Override
         public void initLogs(String... logs) {
-            log.call("initLogs", (Object[]) logs);
+            log.call("initLogs", (Object[])logs);
         }
 
 
