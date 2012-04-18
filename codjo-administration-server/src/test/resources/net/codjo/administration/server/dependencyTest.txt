@@ -11,7 +11,7 @@ net.codjo.administration.server.audit.mad
 	-> net.codjo.security.common.api
 	-> net.codjo.test.common
 	-> org.mockito
-	-> org.mockito.internal.progress
+	-> org.mockito.stubbing
 
 net.codjo.administration.server.audit.memory
 	-> net.codjo.agent.test
@@ -59,4 +59,4 @@ net.codjo.administration.server.plugin
 	-> net.codjo.plugin.server
 	-> net.codjo.test.common
 	-> org.mockito
-	-> org.mockito.internal.progress
+	-> org.mockito.stubbing
