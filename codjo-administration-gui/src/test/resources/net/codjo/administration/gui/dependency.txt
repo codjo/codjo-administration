@@ -7,6 +7,7 @@ net.codjo.administration.gui.plugin
 	-> net.codjo.gui.toolkit.util
 	-> net.codjo.gui.toolkit.waiting
 	-> net.codjo.i18n.common
+	-> net.codjo.i18n.gui
 	-> net.codjo.mad.gui.base
 	-> net.codjo.mad.gui.framework
 	-> net.codjo.mad.gui.i18n
