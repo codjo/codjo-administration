@@ -1,4 +1,5 @@
 package net.codjo.administration.gui.plugin;
+import net.codjo.administration.gui.AdministrationGuiContext;
 import net.codjo.agent.AgentContainerMock;
 import net.codjo.gui.toolkit.i18n.InternationalizationTestUtil;
 import net.codjo.mad.gui.framework.DefaultGuiContext;
@@ -16,7 +17,7 @@ public class AdministrationActionTest extends UISpecTestCase {
 
 
     public void test_security_allowed() {
-        DefaultGuiContext guiContext = new DefaultGuiContext();
+        DefaultGuiContext guiContext = new AdministrationGuiContext();
         guiContext.setUser(new UserMock().mockIsAllowedTo(AdministrationFunctions.ADMINISTRATE_SERVER,
                                                           true));
         administrationAction = new AdministrationAction(guiContext, new AgentContainerMock(log));

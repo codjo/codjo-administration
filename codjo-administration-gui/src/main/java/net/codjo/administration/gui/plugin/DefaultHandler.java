@@ -14,7 +14,7 @@ class DefaultHandler implements Handler {
 
 
     DefaultHandler(GuiContext guiContext, GuiAgent guiAgent) {
-        this(guiContext, new AdministrationGui(guiAgent));
+        this(guiContext, new AdministrationGui(guiContext, guiAgent));
     }
 
 
