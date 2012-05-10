@@ -11,7 +11,7 @@
     <parent>
         <groupId>net.codjo.administration</groupId>
         <artifactId>codjo-administration</artifactId>
-        <version>0.16-SNAPSHOT</version>
+        <version>0.16</version>
     </parent>
     <dependencies>
         <dependency>
