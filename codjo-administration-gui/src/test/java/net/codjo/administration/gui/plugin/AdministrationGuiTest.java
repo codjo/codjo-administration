@@ -5,6 +5,8 @@ import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
 import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
 import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
 import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
+
+import net.codjo.administration.gui.AdministrationGuiContext;
 import net.codjo.gui.toolkit.waiting.WaitingPanel;
 import net.codjo.test.common.LogString;
 import javax.swing.JButton;
@@ -23,7 +25,7 @@ public class AdministrationGuiTest extends UISpecTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         log = new LogString();
-        gui = new AdministrationGui(new GuiAgentMock(log), new WaitingPanelMock(log));
+        gui = new AdministrationGui(new AdministrationGuiContext(), new GuiAgentMock(log), new WaitingPanelMock(log));
         window = new Window(gui);
     }
 

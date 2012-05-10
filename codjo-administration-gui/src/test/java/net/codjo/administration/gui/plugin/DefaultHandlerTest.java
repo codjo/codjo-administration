@@ -1,6 +1,7 @@
 package net.codjo.administration.gui.plugin;
 import java.util.Arrays;
 import javax.swing.JDesktopPane;
+import net.codjo.administration.gui.AdministrationGuiContext;
 import net.codjo.gui.toolkit.i18n.InternationalizationTestUtil;
 import net.codjo.mad.gui.framework.DefaultGuiContext;
 import net.codjo.test.common.LogString;
@@ -189,7 +190,7 @@ public class DefaultHandlerTest extends UISpecTestCase {
     private class AdministrationGuiMock extends AdministrationGui {
 
         private AdministrationGuiMock(LogString log) {
-            super(new GuiAgentMock(log));
+            super(new AdministrationGuiContext(), new GuiAgentMock(log));
         }
 
 

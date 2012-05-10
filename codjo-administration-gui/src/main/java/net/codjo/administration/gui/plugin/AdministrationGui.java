@@ -1,17 +1,4 @@
 package net.codjo.administration.gui.plugin;
-import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
-import static net.codjo.administration.gui.plugin.ActionType.DISABLE_SERVICE;
-import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
-import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
-import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
-import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
-import net.codjo.agent.GuiAgent;
-import net.codjo.agent.GuiEvent;
-import net.codjo.gui.toolkit.HelpButton;
-import net.codjo.gui.toolkit.LabelledItemPanel;
-import net.codjo.gui.toolkit.waiting.WaitingPanel;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,8 +12,26 @@ import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import net.codjo.agent.GuiAgent;
+import net.codjo.agent.GuiEvent;
+import net.codjo.gui.toolkit.HelpButton;
+import net.codjo.gui.toolkit.LabelledItemPanel;
+import net.codjo.gui.toolkit.waiting.WaitingPanel;
+import net.codjo.i18n.gui.InternationalizableContainer;
+import net.codjo.i18n.gui.TranslationNotifier;
+import net.codjo.mad.gui.framework.GuiContext;
+import net.codjo.mad.gui.i18n.InternationalizationUtil;
 
-class AdministrationGui extends JInternalFrame implements ActionListener {
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
+import static net.codjo.administration.gui.plugin.ActionType.DISABLE_SERVICE;
+import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
+import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
+import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
+
+class AdministrationGui extends JInternalFrame implements ActionListener, InternationalizableContainer {
     private final JTabbedPane tabbedPane = new JTabbedPane();
     private final GuiAgent guiAgent;
     private final GuiLocker guiLocker;
@@ -36,20 +41,36 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
     private final SystemPropertiesPanel systemPropertiesPanel = new SystemPropertiesPanel();
     private static final String URL_CONFLUENCE
           = "http://wp-confluence/confluence/display/framework/Guide+Utilisateur+IHM+de+agf-administration";
+    private GuiContext guiContext;
+    private TranslationNotifier translationNotifier;
+    private JButton closeButton;
 
 
-    AdministrationGui(GuiAgent guiAgent) {
-        this(guiAgent, new WaitingPanel());
+    AdministrationGui(GuiContext guiContext, GuiAgent guiAgent) {
+        this(guiContext, guiAgent, new WaitingPanel());
     }
 
 
-    AdministrationGui(GuiAgent guiAgent, WaitingPanel waitingPanel) {
+    AdministrationGui(GuiContext guiContext, GuiAgent guiAgent, WaitingPanel waitingPanel) {
         super("Administration du serveur", true, false, true, true);
 
+        this.guiContext = guiContext;
         this.guiAgent = guiAgent;
         this.guiLocker = new GuiLocker(waitingPanel);
 
         initGui();
+    }
+
+
+    public void addInternationalizableComponents(TranslationNotifier notifier) {
+        notifier.addInternationalizableComponent(this, "AdministrationGui.title");
+        notifier.addInternationalizableComponent(closeButton, "AdministrationGui.closeButton", null);
+        notifier.addInternationalizableComponent(tabbedPane, null, new String[]{
+              "AdministrationGui.tabbedPane.settings",
+              "AdministrationGui.tabbedPane.logs",
+              "AdministrationGui.tabbedPane.plugins",
+              "AdministrationGui.tabbedPane.system",
+        });
     }
 
 
@@ -107,8 +128,16 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
             stopButton.addActionListener(this);
             panel.add(stopButton);
 
+            registerStartAndStopButtons(startButton, stopButton);
+
             pluginsPanel.addItem(plugin, panel);
         }
+    }
+
+
+    private void registerStartAndStopButtons(JButton startButton, JButton stopButton) {
+        translationNotifier.addInternationalizableComponent(startButton, "AdministrationGui.startButton", null);
+        translationNotifier.addInternationalizableComponent(stopButton, "AdministrationGui.stopButton", null);
     }
 
 
@@ -159,7 +188,7 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
         HelpButton helpButton = new HelpButton();
         helpButton.setHelpUrl(URL_CONFLUENCE);
-        JButton closeButton = new JButton("Fermer");
+        closeButton = new JButton("Fermer");
         buttonsPanel.add(helpButton);
         buttonsPanel.add(Box.createGlue());
         closeButton.setActionCommand(CLOSE.name());
@@ -172,12 +201,15 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
         initReadLogsPanel();
         initStartStopPluginsPanel();
         initSystemPropertiesPanel();
+
+        translationNotifier = InternationalizationUtil.retrieveTranslationNotifier(guiContext);
+        translationNotifier.addInternationalizableContainer(this);
     }
 
 
     private void initConfigurationPanel() {
         tabbedPane.add("Pilotage", new JScrollPane(configurationPanel.getMainPanel()));
-        configurationPanel.init(this);
+        configurationPanel.init(this, guiContext);
     }
 
 
@@ -186,6 +218,8 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
 
         auditLogPanel.getReadLog().setActionCommand(READ_LOG.name());
         auditLogPanel.getReadLog().addActionListener(this);
+
+        auditLogPanel.init(guiContext);
     }
 
 
@@ -199,6 +233,7 @@ class AdministrationGui extends JInternalFrame implements ActionListener {
 
     private void initSystemPropertiesPanel() {
         tabbedPane.add("Propriétés système", systemPropertiesPanel.getMainPanel());
+        systemPropertiesPanel.init(guiContext);
     }
 
 

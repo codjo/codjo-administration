@@ -1,6 +1,10 @@
 net.codjo.administration.gui
+	-> net.codjo.i18n.common
+	-> net.codjo.mad.gui.i18n
+	-> net.codjo.mad.gui.util
 
 net.codjo.administration.gui.plugin
+	-> net.codjo.administration.gui
 	-> net.codjo.agent
 	-> net.codjo.agent.test
 	-> net.codjo.gui.toolkit.waiting
