@@ -1,8 +1,9 @@
 package net.codjo.administration.gui.plugin;
-import net.codjo.administration.gui.plugin.AdministrationGuiAgent.Handler;
-import net.codjo.test.common.LogString;
 import java.util.Arrays;
 import java.util.List;
+import net.codjo.administration.gui.plugin.AdministrationGuiAgent.Handler;
+import net.codjo.test.common.LogString;
+
 import static org.junit.Assert.assertEquals;
 /**
  *
@@ -97,6 +98,11 @@ public class HandlerMock implements Handler {
 
     public void handleLogDirChanged(String newLogDir) {
         log.call("handleLogDirChanged", newLogDir);
+    }
+
+
+    public void handleJdbcUsersFilterChanged(String newJdbcUsersFilter) {
+        log.call("handleJdbcUsersFilterChanged", newJdbcUsersFilter);
     }
 
 

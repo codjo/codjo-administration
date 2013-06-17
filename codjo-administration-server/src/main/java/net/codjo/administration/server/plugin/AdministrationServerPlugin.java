@@ -1,18 +1,14 @@
 package net.codjo.administration.server.plugin;
 import net.codjo.administration.common.ConfigurationOntology;
-import static net.codjo.administration.common.Constants.MANAGE_LOGS_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_PLUGINS_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_SYSTEM_PROPERTIES_TYPE;
 import net.codjo.administration.server.audit.AdministrationLogFile;
 import net.codjo.administration.server.audit.memory.MemoryWatcherAgent.Handler;
+import net.codjo.administration.server.operation.configuration.AdministrationServerConfiguration;
+import net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent;
+import net.codjo.administration.server.operation.configuration.DefaultAdministrationServerConfiguration;
 import net.codjo.administration.server.operation.log.DefaultLogReader;
 import net.codjo.administration.server.operation.log.LogReaderAgent;
 import net.codjo.administration.server.operation.plugin.DefaultPluginManager;
 import net.codjo.administration.server.operation.plugin.PluginManagerAgent;
-import net.codjo.administration.server.operation.configuration.AdministrationServerConfiguration;
-import net.codjo.administration.server.operation.configuration.DefaultAdministrationServerConfiguration;
-import net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent;
 import net.codjo.administration.server.operation.systemProperties.DefaultSystemProperties;
 import net.codjo.administration.server.operation.systemProperties.SystemPropertiesAgent;
 import net.codjo.agent.AgentContainer;
@@ -23,9 +19,16 @@ import net.codjo.mad.server.plugin.MadServerOperations;
 import net.codjo.mad.server.plugin.MadServerPlugin;
 import net.codjo.plugin.server.AbstractServerPlugin;
 import net.codjo.plugin.server.ServerCore;
+import net.codjo.sql.server.JdbcManager;
+
+import static net.codjo.administration.common.Constants.MANAGE_LOGS_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_PLUGINS_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_SYSTEM_PROPERTIES_TYPE;
 
 public class AdministrationServerPlugin extends AbstractServerPlugin {
     private static final String LOG_DIR_PROPERTY = "log.dir";
+    private static final String JDBC_USERS_FILTER_PROPERTY = "jdbc.users.filter";
     private final DefaultAdministrationServerConfiguration configuration
           = new DefaultAdministrationServerConfiguration();
     private final ServerCore serverCore;
@@ -69,6 +72,21 @@ public class AdministrationServerPlugin extends AbstractServerPlugin {
             configuration.setDefaultRecordMemoryUsage(readBoolean(containerConfiguration,
                                                                   ConfigurationOntology.RECORD_MEMORY_USAGE));
         }
+
+        if (containerConfiguration.getParameter(ConfigurationOntology.RECORD_JDBC_STATISTICS) != null) {
+            configuration.setDefaultRecordJdbcStatistics(readBoolean(containerConfiguration,
+                                                                     ConfigurationOntology.RECORD_JDBC_STATISTICS));
+        }
+        if (containerConfiguration.getParameter(ConfigurationOntology.JDBC_USERS_FILTER) != null) {
+            configuration.setDefaultJdbcUsersFilter(containerConfiguration.getParameter(
+                  ConfigurationOntology.JDBC_USERS_FILTER));
+        }
+        else if (!configuration.isJdbcUsersFilterSet()) {
+            String jdbcUsersFilterValue = System.getProperty(JDBC_USERS_FILTER_PROPERTY);
+            if (jdbcUsersFilterValue != null) {
+                configuration.setDefaultJdbcUsersFilter(jdbcUsersFilterValue);
+            }
+        }
     }
 
 
@@ -81,16 +99,21 @@ public class AdministrationServerPlugin extends AbstractServerPlugin {
         pluginManagerAgentController.start();
 
         DefaultLogReader defaultLogReader = new DefaultLogReader(configuration.getAuditDestinationDir());
-        logManagerAgentController = agentContainer.acceptNewAgent(MANAGE_LOGS_SERVICE_TYPE, new LogReaderAgent(defaultLogReader));
+        logManagerAgentController = agentContainer.acceptNewAgent(MANAGE_LOGS_SERVICE_TYPE,
+                                                                  new LogReaderAgent(defaultLogReader));
         logManagerAgentController.start();
 
+        JdbcManager jdbcManager = serverCore.getGlobalComponent(JdbcManager.class);
         serviceAgentController = agentContainer.acceptNewAgent(MANAGE_SERVICE_TYPE,
-               new AdministrationServerConfigurationAgent(configuration, madServerOperations, defaultLogReader));
+                                                               new AdministrationServerConfigurationAgent(configuration,
+                                                                                                          madServerOperations,
+                                                                                                          defaultLogReader,
+                                                                                                          jdbcManager));
         serviceAgentController.start();
 
         DefaultSystemProperties defaultSystemProperties = new DefaultSystemProperties();
         systemPropertiesController = agentContainer.acceptNewAgent(MANAGE_SYSTEM_PROPERTIES_TYPE,
-               new SystemPropertiesAgent(defaultSystemProperties));
+                                                                   new SystemPropertiesAgent(defaultSystemProperties));
         systemPropertiesController.start();
     }
 

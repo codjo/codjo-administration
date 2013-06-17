@@ -5,6 +5,9 @@ public interface AdministrationServerConfiguration {
     void setRecordMemoryUsage(boolean record);
 
 
+    void setRecordJdbcStatistics(boolean record);
+
+
     void setRecordHandlerStatistics(boolean record);
 
 

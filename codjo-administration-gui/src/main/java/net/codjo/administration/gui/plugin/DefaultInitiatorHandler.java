@@ -89,6 +89,14 @@ class DefaultInitiatorHandler implements InitiatorHandler {
                     handler.handleLogDirChanged(XmlCodec.logFromXml(inform.getContent()));
                     break;
 
+                case CHANGE_JDBC_USERS_FILTER:
+                    handler.handleJdbcUsersFilterChanged(XmlCodec.logFromXml(inform.getContent()));
+                    break;
+
+                case RESTORE_JDBC_USERS_FILTER:
+                    handler.handleJdbcUsersFilterChanged(XmlCodec.logFromXml(inform.getContent()));
+                    break;
+
                 case GET_SYSTEM_PROPERTIES:
                     handler.handleSystemProperties(XmlCodec.logFromXml(inform.getContent()));
                     break;

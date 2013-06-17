@@ -1,25 +1,10 @@
 package net.codjo.administration.gui.plugin;
 import net.codjo.administration.common.AdministrationOntology;
-import static net.codjo.administration.common.Constants.MANAGE_LOGS_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_PLUGINS_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_SERVICE_TYPE;
-import static net.codjo.administration.common.Constants.MANAGE_SYSTEM_PROPERTIES_TYPE;
-import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
-import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
-import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
-import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
-import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
 import net.codjo.agent.AclMessage.Performative;
 import net.codjo.agent.ContainerFailureException;
 import net.codjo.agent.GuiEvent;
-import static net.codjo.agent.MessageTemplate.matchContent;
-import static net.codjo.agent.MessageTemplate.matchPerformative;
-import static net.codjo.agent.MessageTemplate.matchProtocol;
 import net.codjo.agent.protocol.RequestProtocol;
 import net.codjo.agent.test.AgentAssert.Assertion;
-import static net.codjo.agent.test.AgentAssert.logAndClear;
 import net.codjo.agent.test.AgentContainerFixture;
 import net.codjo.agent.test.AgentContainerFixture.Runnable;
 import net.codjo.agent.test.ReceiveMessageStep;
@@ -27,8 +12,26 @@ import net.codjo.agent.test.Story;
 import net.codjo.agent.test.StoryPart;
 import net.codjo.agent.test.TesterAgentRecorder;
 import net.codjo.test.common.LogString;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+
+import static net.codjo.administration.common.Constants.MANAGE_LOGS_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_PLUGINS_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_SERVICE_TYPE;
+import static net.codjo.administration.common.Constants.MANAGE_SYSTEM_PROPERTIES_TYPE;
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_JDBC_USERS_FILTER;
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
+import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
+import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_JDBC_USERS_FILTER;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
+import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
+import static net.codjo.agent.MessageTemplate.matchContent;
+import static net.codjo.agent.MessageTemplate.matchPerformative;
+import static net.codjo.agent.MessageTemplate.matchProtocol;
+import static net.codjo.agent.test.AgentAssert.logAndClear;
+import static org.junit.Assert.assertTrue;
 
 public class AdministrationGuiAgentTest {
     private static final String PLUGIN_TESTER_AGENT = MANAGE_PLUGINS_SERVICE_TYPE + "-tester";
@@ -561,6 +564,103 @@ public class AdministrationGuiAgentTest {
 
 
     @Test
+    public void test_changeJdbcUsersFilter() throws Exception {
+        initAndCheckSilentAgent(PLUGIN_TESTER_AGENT, MANAGE_PLUGINS_SERVICE_TYPE);
+        initAndCheckSilentAgent(SYSTEM_PROPERTIES_TESTER_AGENT, MANAGE_SYSTEM_PROPERTIES_TYPE);
+        initManageLogsAgent().then()
+              .receiveMessage()
+              .assertReceivedMessage(matchPerformative(Performative.QUERY))
+              .assertReceivedMessage(matchProtocol(RequestProtocol.QUERY))
+              .assertReceivedMessage(matchContent(AdministrationOntology.GET_LOG_FILES_ACTION))
+              .replyWith(Performative.INFORM, "<list>"
+                                              + "  <string>audit.log</string>"
+                                              + "</list>");
+        story.record().assertNumberOfAgentWithService(1, MANAGE_LOGS_SERVICE_TYPE);
+
+        initManageServicesAgent("recordJdbcStatistics").then()
+              .receiveMessage()
+              .assertReceivedMessage(matchPerformative(Performative.REQUEST))
+              .assertReceivedMessage(matchProtocol(RequestProtocol.REQUEST))
+              .assertReceivedMessage(matchContent(
+                    AdministrationOntology.CHANGE_JDBC_USERS_FILTER + " user1"))
+              .replyWith(Performative.INFORM, "<string>user1</string>");
+        story.record().assertNumberOfAgentWithService(1, MANAGE_SERVICE_TYPE);
+
+        final AdministrationGuiAgent agent = new AdministrationGuiAgent(handlerMock);
+        story.record().startAgent(GUI_AGENT, agent);
+        story.record().assertContainsAgent(GUI_AGENT);
+
+        story.record().addAssert(assertLogsReceived("server.log", "mad.log"));
+        story.record().addAssert(assertServicesReceived("recordJdbcStatistics.enable"));
+        //story.record().addAssert(assertServicesReceived("recordHandlerStatistics.enable"));
+        story.record().addAction(clearLog());
+
+        story.record()
+              .addAction(new AgentContainerFixture.Runnable() {
+                  public void run() throws Exception {
+                      GuiEvent guiEvent = new GuiEvent(this, CHANGE_JDBC_USERS_FILTER.ordinal());
+                      guiEvent.addParameter("user1");
+                      agent.postGuiEvent(guiEvent);
+                  }
+              });
+
+        recordAssertLog("handleActionStarted(), "
+                        + "handleActionStarted(), "
+                        + "handleJdbcUsersFilterChanged(user1), "
+                        + "handleLogsReceived(audit.log)");
+
+        story.execute();
+    }
+
+
+    @Test
+    public void test_restoreJdbcUsersFilter() throws Exception {
+        initAndCheckSilentAgent(PLUGIN_TESTER_AGENT, MANAGE_PLUGINS_SERVICE_TYPE);
+        initAndCheckSilentAgent(SYSTEM_PROPERTIES_TESTER_AGENT, MANAGE_SYSTEM_PROPERTIES_TYPE);
+        initManageLogsAgent().then()
+              .receiveMessage()
+              .assertReceivedMessage(matchPerformative(Performative.QUERY))
+              .assertReceivedMessage(matchProtocol(RequestProtocol.QUERY))
+              .assertReceivedMessage(matchContent(AdministrationOntology.GET_LOG_FILES_ACTION))
+              .replyWith(Performative.INFORM, "<list>"
+                                              + "  <string>mad.log</string>"
+                                              + "  <string>server.log</string>"
+                                              + "</list>");
+        story.record().assertNumberOfAgentWithService(1, MANAGE_LOGS_SERVICE_TYPE);
+
+        initManageServicesAgent("recordJdbcStatistics").then()
+              .receiveMessage()
+              .assertReceivedMessage(matchPerformative(Performative.REQUEST))
+              .assertReceivedMessage(matchProtocol(RequestProtocol.REQUEST))
+              .assertReceivedMessage(matchContent(AdministrationOntology.RESTORE_JDBC_USERS_FILTER))
+              .replyWith(Performative.INFORM, "<string>user1</string>");
+        story.record().assertNumberOfAgentWithService(1, MANAGE_SERVICE_TYPE);
+
+        final AdministrationGuiAgent agent = new AdministrationGuiAgent(handlerMock);
+        story.record().startAgent(GUI_AGENT, agent);
+
+        story.record().addAssert(assertLogsReceived("server.log", "mad.log"));
+        story.record().addAssert(assertServicesReceived("recordJdbcStatistics.enable"));
+        story.record().addAction(clearLog());
+
+        story.record()
+              .addAction(new AgentContainerFixture.Runnable() {
+                  public void run() throws Exception {
+                      GuiEvent guiEvent = new GuiEvent(this, RESTORE_JDBC_USERS_FILTER.ordinal());
+                      agent.postGuiEvent(guiEvent);
+                  }
+              });
+
+        recordAssertLog("handleActionStarted(), "
+                        + "handleActionStarted(), "
+                        + "handleJdbcUsersFilterChanged(user1), "
+                        + "handleLogsReceived(mad.log, server.log)");
+
+        story.execute();
+    }
+
+
+    @Test
     public void test_enableService() throws Exception {
         initManageServicesAgent()
               .then()
@@ -637,6 +737,11 @@ public class AdministrationGuiAgentTest {
 
 
     private ReceiveMessageStep initManageServicesAgent() {
+        return initManageServicesAgent("recordHandlerStatistics");
+    }
+
+
+    private ReceiveMessageStep initManageServicesAgent(String serviceName) {
         return story.record()
               .startTester(SERVICE_TESTER_AGENT).registerToDF(MANAGE_SERVICE_TYPE).then()
               .receiveMessage()
@@ -644,7 +749,7 @@ public class AdministrationGuiAgentTest {
               .assertReceivedMessage(matchProtocol(RequestProtocol.QUERY))
               .assertReceivedMessage(matchContent(AdministrationOntology.GET_SERVICES_ACTION))
               .replyWith(Performative.INFORM, "<list>"
-                                              + "  <string>recordHandlerStatistics.enable</string>"
+                                              + "  <string>" + serviceName + ".enable</string>"
                                               + "</list>");
     }
 

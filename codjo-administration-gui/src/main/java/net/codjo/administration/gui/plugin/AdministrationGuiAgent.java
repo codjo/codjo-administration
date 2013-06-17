@@ -1,19 +1,7 @@
 package net.codjo.administration.gui.plugin;
+import java.util.List;
 import net.codjo.administration.common.AdministrationOntology;
 import net.codjo.administration.common.Constants;
-import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
-import static net.codjo.administration.gui.plugin.ActionType.DISABLE_SERVICE;
-import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
-import static net.codjo.administration.gui.plugin.ActionType.GET_LOGS;
-import static net.codjo.administration.gui.plugin.ActionType.GET_PLUGINS;
-import static net.codjo.administration.gui.plugin.ActionType.GET_SERVICES;
-import static net.codjo.administration.gui.plugin.ActionType.GET_SYSTEM_ENVIRONMENT;
-import static net.codjo.administration.gui.plugin.ActionType.GET_SYSTEM_PROPERTIES;
-import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
-import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
-import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
-import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
 import net.codjo.agent.AclMessage;
 import net.codjo.agent.AclMessage.Performative;
 import net.codjo.agent.Aid;
@@ -26,7 +14,22 @@ import net.codjo.agent.behaviour.SequentialBehaviour;
 import net.codjo.agent.protocol.RequestInitiator;
 import net.codjo.agent.protocol.RequestProtocol;
 import net.codjo.mad.gui.framework.GuiContext;
-import java.util.List;
+
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_JDBC_USERS_FILTER;
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
+import static net.codjo.administration.gui.plugin.ActionType.DISABLE_SERVICE;
+import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
+import static net.codjo.administration.gui.plugin.ActionType.GET_LOGS;
+import static net.codjo.administration.gui.plugin.ActionType.GET_PLUGINS;
+import static net.codjo.administration.gui.plugin.ActionType.GET_SERVICES;
+import static net.codjo.administration.gui.plugin.ActionType.GET_SYSTEM_ENVIRONMENT;
+import static net.codjo.administration.gui.plugin.ActionType.GET_SYSTEM_PROPERTIES;
+import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_JDBC_USERS_FILTER;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
+import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
+import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
 
 class AdministrationGuiAgent extends GuiAgent {
     private final Handler handler;
@@ -127,6 +130,12 @@ class AdministrationGuiAgent extends GuiAgent {
         else if (guiEvent.getType() == RESTORE_LOG_DIR.ordinal()) {
             restoreLogDir();
         }
+        else if (guiEvent.getType() == CHANGE_JDBC_USERS_FILTER.ordinal()) {
+            changeJdbcUsersFilter((String)guiEvent.getParameter(0));
+        }
+        else if (guiEvent.getType() == RESTORE_JDBC_USERS_FILTER.ordinal()) {
+            restoreJdbcUsersFilter();
+        }
     }
 
 
@@ -209,6 +218,35 @@ class AdministrationGuiAgent extends GuiAgent {
                                                                                                    RESTORE_LOG_DIR),
                                                                        aclMessage);
         addBehaviour(SequentialBehaviour.wichStartsWith(restoreLogDirBehaviour).andThen(createReadLogBehaviour()));
+    }
+
+
+    private void changeJdbcUsersFilter(String newJdbcUsersFilter) {
+        AclMessage aclMessage = new AclMessage(Performative.REQUEST, RequestProtocol.REQUEST);
+        aclMessage.addReceiver(findServiceManager());
+        aclMessage.setContent(AdministrationOntology.CHANGE_JDBC_USERS_FILTER + " " + newJdbcUsersFilter);
+
+        RequestInitiator changeJdbcUsersFilterBehaviour = new RequestInitiator(this,
+                                                                               new DefaultInitiatorHandler(handler,
+                                                                                                           CHANGE_JDBC_USERS_FILTER,
+                                                                                                           newJdbcUsersFilter),
+                                                                               aclMessage);
+        addBehaviour(SequentialBehaviour.wichStartsWith(changeJdbcUsersFilterBehaviour)
+                           .andThen(createReadLogBehaviour()));
+    }
+
+
+    private void restoreJdbcUsersFilter() {
+        AclMessage aclMessage = new AclMessage(Performative.REQUEST, RequestProtocol.REQUEST);
+        aclMessage.addReceiver(findServiceManager());
+        aclMessage.setContent(AdministrationOntology.RESTORE_JDBC_USERS_FILTER);
+
+        RequestInitiator restoreJdbcUsersFilterBehaviour = new RequestInitiator(this,
+                                                                                new DefaultInitiatorHandler(handler,
+                                                                                                            ActionType.RESTORE_JDBC_USERS_FILTER),
+                                                                                aclMessage);
+        addBehaviour(SequentialBehaviour.wichStartsWith(restoreJdbcUsersFilterBehaviour)
+                           .andThen(createReadLogBehaviour()));
     }
 
 
@@ -349,6 +387,9 @@ class AdministrationGuiAgent extends GuiAgent {
 
 
         void handleLogDirChanged(String newLogDir);
+
+
+        void handleJdbcUsersFilterChanged(String newJdbcUsersFilter);
 
 
         void handleSystemProperties(String value);

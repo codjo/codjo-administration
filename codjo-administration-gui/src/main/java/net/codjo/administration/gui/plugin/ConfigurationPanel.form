@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="net.codjo.administration.gui.plugin.ConfigurationPanel">
-  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="6" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="10" vgap="10">
+  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="8" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="10" vgap="10">
     <margin top="10" left="20" bottom="10" right="10"/>
     <constraints>
       <xy x="20" y="20" width="800" height="400"/>
@@ -12,7 +12,7 @@
     <children>
       <vspacer id="8eb88">
         <constraints>
-          <grid row="4" column="0" row-span="2" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+          <grid row="6" column="0" row-span="2" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
             <preferred-size width="11" height="87"/>
           </grid>
         </constraints>
@@ -132,6 +132,93 @@
           <rolloverEnabled value="true"/>
           <text value=""/>
           <toolTipText value="Annuler la saisie"/>
+        </properties>
+      </component>
+      <component id="d985" class="javax.swing.JLabel" binding="jdbcAuditLabel">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Audit des requêtes"/>
+        </properties>
+      </component>
+      <component id="50d61" class="javax.swing.JButton" binding="recordJdbcStatisticsButton">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="true"/>
+          <focusPainted value="true"/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value=""/>
+          <requestFocusEnabled value="true"/>
+          <rolloverEnabled value="true"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="df7fd" class="javax.swing.JLabel" binding="jdbcUsersFilterLabel">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Audit des requêtes pour les utilisateurs suivants"/>
+        </properties>
+      </component>
+      <component id="974a8" class="javax.swing.JTextField" binding="jdbcUsersFilter">
+        <constraints>
+          <grid row="5" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <enabled value="true"/>
+          <name value=""/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="7faa3" class="javax.swing.JButton" binding="undoJdbcButton">
+        <constraints>
+          <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="true"/>
+          <enabled value="false"/>
+          <focusPainted value="true"/>
+          <inheritsPopupMenu value="false"/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="undo"/>
+          <requestFocusEnabled value="true"/>
+          <rolloverEnabled value="true"/>
+          <text value=""/>
+          <toolTipText value="Annuler la saisie"/>
+        </properties>
+      </component>
+      <component id="6e403" class="javax.swing.JButton" binding="applyJdbcButton">
+        <constraints>
+          <grid row="5" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="false"/>
+          <label value=""/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="applyJdbcButton"/>
+          <text value=""/>
+          <toolTipText value="Appliquer"/>
+        </properties>
+      </component>
+      <component id="6825" class="javax.swing.JButton" binding="resetJdbcButton">
+        <constraints>
+          <grid row="5" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="true"/>
+          <inheritsPopupMenu value="false"/>
+          <label value=""/>
+          <margin top="3" left="3" bottom="3" right="3"/>
+          <name value="reset"/>
+          <text value=""/>
+          <toolTipText value="Recharger la configuration statique"/>
         </properties>
       </component>
     </children>

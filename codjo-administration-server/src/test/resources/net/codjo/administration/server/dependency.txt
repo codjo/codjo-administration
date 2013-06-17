@@ -1,11 +1,22 @@
+net.codjo.administration.common
+net.codjo.administration.server.audit
+	-> net.codjo.sql.spy
+	-> net.codjo.util.time
+
+net.codjo.administration.server.audit.jdbc
+	-> net.codjo.administration.server.audit
+	-> net.codjo.sql.server
+	-> net.codjo.sql.spy
+	-> net.codjo.util.time
+
 net.codjo.administration.server.audit.mad
 	-> net.codjo.administration.server.audit
 	-> net.codjo.agent
 	-> net.codjo.mad.server
 	-> net.codjo.mad.server.handler
-	-> net.codjo.mad.server.util
 	-> net.codjo.security.common.api
 	-> net.codjo.sql.spy
+	-> net.codjo.util.time
 	-> org.exolab.castor.jdo
 
 net.codjo.administration.server.audit.memory
@@ -21,6 +32,7 @@ net.codjo.administration.server.operation.configuration
     -> net.codjo.administration.common
     -> net.codjo.administration.server.audit
     -> net.codjo.administration.server.audit.mad
+	-> net.codjo.administration.server.audit.jdbc
     -> net.codjo.administration.server.audit.memory
     -> net.codjo.administration.server.operation.log
     -> net.codjo.agent
@@ -28,7 +40,9 @@ net.codjo.administration.server.operation.configuration
     -> net.codjo.agent.protocol
     -> net.codjo.mad.server.handler
     -> net.codjo.mad.server.plugin
-    		
+	-> net.codjo.sql.server
+	-> net.codjo.util.time
+
 net.codjo.administration.server.operation.log
 	-> net.codjo.administration.common
 	-> net.codjo.agent
@@ -52,3 +66,4 @@ net.codjo.administration.server.plugin
 	-> net.codjo.agent
 	-> net.codjo.mad.server.plugin
 	-> net.codjo.plugin.server
+	-> net.codjo.sql.server
