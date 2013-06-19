@@ -1,12 +1,12 @@
 package net.codjo.administration.gui.plugin;
+import java.beans.PropertyVetoException;
+import java.util.List;
+import javax.swing.SwingUtilities;
 import net.codjo.administration.common.ConfigurationOntology;
 import net.codjo.administration.gui.plugin.AdministrationGuiAgent.Handler;
 import net.codjo.agent.GuiAgent;
 import net.codjo.gui.toolkit.util.ErrorDialog;
 import net.codjo.mad.gui.framework.GuiContext;
-import java.beans.PropertyVetoException;
-import java.util.List;
-import javax.swing.SwingUtilities;
 
 class DefaultHandler implements Handler {
     private GuiContext guiContext;
@@ -169,6 +169,17 @@ class DefaultHandler implements Handler {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 gui.initServices(new String[]{ConfigurationOntology.AUDIT_DESTINATION_DIR + " " + newLogDir});
+                gui.unlockGui();
+            }
+        });
+    }
+
+
+    public void handleJdbcUsersFilterChanged(final String newJdbcUsersFilter) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                String filter = (newJdbcUsersFilter == null) ? "" : " " + newJdbcUsersFilter;
+                gui.initServices(new String[]{ConfigurationOntology.JDBC_USERS_FILTER + filter});
                 gui.unlockGui();
             }
         });

@@ -10,6 +10,12 @@ public class AdministrationLogFile {
     private static final String APPENDER_NAME = "rollingFileAppender";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 
+    /**
+     * This value appear to be a reasonable initial line size to avoid copying the buffer in a call to write. It's
+     * slightly bigger than actual maximal size found in a real application.
+     */
+    private static final int INITIAL_LINE_SIZE = 256;
+
 
     public void init(String destinationFile) throws IOException {
         LOGGER.setAdditivity(false);
@@ -22,16 +28,37 @@ public class AdministrationLogFile {
     }
 
 
-    public void write(String tag1, String tag2, Object... values) {
+    final public void write(String tag1, String tag2, Object... values) {
         write(tag1, tag2, System.currentTimeMillis(), values);
     }
 
 
-    public void write(String tag1, String tag2, long when, Object... values) {
-        StringBuilder log = new StringBuilder()
+    final public void write(String tag1, String tag2, long when, Object... values) {
+        write(tag1, tag2, (Long)when, values);
+    }
+
+
+    final public void writeWithoutTime(String tag1, String tag2, Object... values) {
+        write(tag1, tag2, null, values);
+    }
+
+
+    final public static String formatDate(Long when) {
+        String result = "";
+        if (when != null) {
+            result = DATE_FORMAT.format(when);
+        }
+        return result;
+    }
+
+
+    protected void write(String tag1, String tag2, Long when, Object... values) {
+        StringBuilder log = new StringBuilder(INITIAL_LINE_SIZE)
               .append(tag1)
-              .append("\t").append(tag2)
-              .append("\t").append(DATE_FORMAT.format(when));
+              .append("\t").append(tag2);
+        if (when != null) {
+            log.append("\t").append(formatDate(when));
+        }
         for (Object value : values) {
             log.append("\t").append(value);
         }

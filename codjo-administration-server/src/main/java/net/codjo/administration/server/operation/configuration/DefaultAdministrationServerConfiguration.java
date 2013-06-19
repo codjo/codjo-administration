@@ -5,8 +5,21 @@ public class DefaultAdministrationServerConfiguration implements AdministrationS
     private final Parameter<Boolean> recordMemoryUsage = new Parameter<Boolean>(false);
     private final Parameter<Boolean> defaultRecordHandlerStatistics = new Parameter<Boolean>(false);
     private final Parameter<Boolean> recordHandlerStatistics = new Parameter<Boolean>(false);
+    private final Parameter<Boolean> defaultRecordJdbcStatistics = new Parameter<Boolean>(false);
+    private final Parameter<Boolean> recordJdbcStatistics = new Parameter<Boolean>(false);
     private final Parameter<String> defaultAuditDestinationDir = new Parameter<String>(null);
     private final Parameter<String> auditDestinationDir = new Parameter<String>(null);
+
+    /**
+     * Default value for {@link #jdbcUsersFilter}.
+     */
+    private final Parameter<String> defaultJdbcUsersFilter = new Parameter<String>(null);
+
+    /**
+     * List of users to audit when {@link #recordJdbcStatistics} is enabled. Only users matching this comma separated
+     * list will be audited.
+     */
+    private final Parameter<String> jdbcUsersFilter = new Parameter<String>(null);
 
 
     public boolean isRecordMemoryUsageSet() {
@@ -29,9 +42,11 @@ public class DefaultAdministrationServerConfiguration implements AdministrationS
         this.recordMemoryUsage.setValue(recordMemoryUsage);
     }
 
-    public void restoreDefaultRecordMemoryUsage(){
+
+    public void restoreDefaultRecordMemoryUsage() {
         setRecordMemoryUsage(defaultRecordMemoryUsage.getValue());
     }
+
 
     public boolean isRecordHandlerStatisticsSet() {
         return recordHandlerStatistics.isSet();
@@ -59,6 +74,32 @@ public class DefaultAdministrationServerConfiguration implements AdministrationS
     }
 
 
+    public boolean isRecordJdbcStatisticsSet() {
+        return recordJdbcStatistics.isSet();
+    }
+
+
+    public boolean isRecordJdbcStatistics() {
+        return recordJdbcStatistics.getValue();
+    }
+
+
+    public void setDefaultRecordJdbcStatistics(boolean recordJdbcStatistics) {
+        this.defaultRecordJdbcStatistics.setValue(recordJdbcStatistics);
+        setRecordJdbcStatistics(recordJdbcStatistics);
+    }
+
+
+    public void setRecordJdbcStatistics(boolean recordJdbcStatistics) {
+        this.recordJdbcStatistics.setValue(recordJdbcStatistics);
+    }
+
+
+    public void restoreDefaultRecordJdbcStatistics() {
+        setRecordJdbcStatistics(defaultRecordJdbcStatistics.getValue());
+    }
+
+
     public boolean isAuditDestinationDirSet() {
         return auditDestinationDir.isSet();
     }
@@ -67,8 +108,6 @@ public class DefaultAdministrationServerConfiguration implements AdministrationS
     public String getAuditDestinationDir() {
         return auditDestinationDir.getValue();
     }
-
-
 
 
     public void setDefaultAuditDestinationDir(String logDirValue) {
@@ -84,6 +123,32 @@ public class DefaultAdministrationServerConfiguration implements AdministrationS
 
     public void restoreDefaultAuditDestinationDir() {
         setAuditDestinationDir(defaultAuditDestinationDir.getValue());
+    }
+
+
+    public boolean isJdbcUsersFilterSet() {
+        return jdbcUsersFilter.isSet();
+    }
+
+
+    public String getJdbcUsersFilter() {
+        return jdbcUsersFilter.getValue();
+    }
+
+
+    public void setDefaultJdbcUsersFilter(String filterValue) {
+        this.defaultJdbcUsersFilter.setValue(filterValue);
+        setJdbcUsersFilter(filterValue);
+    }
+
+
+    public void setJdbcUsersFilter(String filterValue) {
+        this.jdbcUsersFilter.setValue(filterValue);
+    }
+
+
+    public void restoreDefaultJdbcUsersFilter() {
+        setJdbcUsersFilter(defaultJdbcUsersFilter.getValue());
     }
 
 

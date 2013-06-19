@@ -1,5 +1,5 @@
 package net.codjo.administration.server.audit.mad;
-import net.codjo.administration.server.audit.AdministrationLogFile;
+import net.codjo.administration.server.audit.AdministrationLogFileMock;
 import net.codjo.agent.UserId;
 import net.codjo.mad.server.MadConnectionManager;
 import net.codjo.mad.server.handler.Handler;
@@ -8,6 +8,7 @@ import net.codjo.security.common.api.User;
 import net.codjo.test.common.LogString;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.stub;
 
@@ -43,21 +44,5 @@ public class HandlerExecutionSpyTest {
         handlerExecutionSpy.handlerStopped(handler, handlerContext);
 
         log.assertContent("write(CONNECTIONS, ), write(HANDLER, Temps Total)");
-    }
-
-
-    private static class AdministrationLogFileMock extends AdministrationLogFile {
-        private LogString log;
-
-
-        private AdministrationLogFileMock(LogString log) {
-            this.log = log;
-        }
-
-
-        @Override
-        public void write(String tag1, String tag2, long when, Object... values) {
-            log.call("write", tag1, tag2);
-        }
     }
 }

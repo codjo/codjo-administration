@@ -12,6 +12,8 @@ public interface AdministrationOntology {
     public static String DISABLE_SERVICE_ACTION = "disable";
     public static String CHANGE_LOG_DIR = "setLogDir";
     public static String RESTORE_LOG_DIR = "restoreLogDir";
+    public static String CHANGE_JDBC_USERS_FILTER = "setJdbcUsersFilter";
+    public static String RESTORE_JDBC_USERS_FILTER = "restoreJdbcUsersFilter";
 
     public static String DISPLAY_SYSTEM_PROPERTIES = "displaySystemProperties";
     public static String DISPLAY_SYSTEM_ENVIRONMENT = "displaySystemEnvironment";

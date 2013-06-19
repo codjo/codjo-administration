@@ -1,11 +1,11 @@
 package net.codjo.administration.server.plugin;
-import net.codjo.administration.common.Constants;
 import net.codjo.administration.common.ConfigurationOntology;
+import net.codjo.administration.common.Constants;
 import net.codjo.administration.server.audit.memory.MemoryWatcherAgent;
+import net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent;
+import net.codjo.administration.server.operation.configuration.DefaultAdministrationServerConfiguration;
 import net.codjo.administration.server.operation.log.LogReaderAgent;
 import net.codjo.administration.server.operation.plugin.PluginManagerAgent;
-import net.codjo.administration.server.operation.configuration.DefaultAdministrationServerConfiguration;
-import net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent;
 import net.codjo.administration.server.operation.systemProperties.SystemPropertiesAgent;
 import net.codjo.agent.AgentContainerMock;
 import net.codjo.agent.ContainerConfiguration;
@@ -15,13 +15,14 @@ import net.codjo.mad.server.plugin.MadServerPlugin;
 import net.codjo.plugin.server.ServerCoreMock;
 import net.codjo.test.common.LogString;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,6 +105,36 @@ public class AdministrationServerPluginTest {
         plugin.initContainer(configuration);
 
         assertTrue(((DefaultAdministrationServerConfiguration)plugin.getConfiguration()).isRecordMemoryUsage());
+    }
+
+
+    @Test
+    public void test_recordJdbcStatistics_configFromDefault() throws Exception {
+        plugin.initContainer(new ContainerConfiguration());
+
+        assertFalse(((DefaultAdministrationServerConfiguration)plugin.getConfiguration()).isRecordJdbcStatistics());
+    }
+
+
+    @Test
+    public void test_recordJdbcStatistics_configFromConf() throws Exception {
+        plugin.getConfiguration().setRecordJdbcStatistics(true);
+
+        plugin.initContainer(new ContainerConfiguration());
+
+        assertTrue(((DefaultAdministrationServerConfiguration)plugin.getConfiguration()).isRecordJdbcStatistics());
+    }
+
+
+    @Test
+    public void test_recordJdbcStatistics_configFromContainer() throws Exception {
+        ContainerConfiguration configuration = new ContainerConfiguration();
+        configuration.setParameter(ConfigurationOntology.RECORD_JDBC_STATISTICS, "true");
+        plugin.getConfiguration().setRecordJdbcStatistics(false);
+
+        plugin.initContainer(configuration);
+
+        assertTrue(((DefaultAdministrationServerConfiguration)plugin.getConfiguration()).isRecordJdbcStatistics());
     }
 
 
@@ -196,16 +227,17 @@ public class AdministrationServerPluginTest {
 
     private void assertLogContent(String expectedContent) {
         log.assertContent(expectedContent
-              .replaceAll("%plugin-agent-class%", PluginManagerAgent.class.getSimpleName())
-              .replaceAll("%plugin-agent%", Constants.MANAGE_PLUGINS_SERVICE_TYPE)
-              .replaceAll("%log-agent-class%", LogReaderAgent.class.getSimpleName())
-              .replaceAll("%log-agent%", Constants.MANAGE_LOGS_SERVICE_TYPE)
-              .replaceAll("%resource-agent-class%", MemoryWatcherAgent.class.getSimpleName())
-              .replaceAll("%resource-agent%", Constants.MANAGE_RESOURCES_SERVICE_TYPE)
-              .replaceAll("%service-agent-class%", AdministrationServerConfigurationAgent.class.getSimpleName())
-              .replaceAll("%service-agent%", Constants.MANAGE_SERVICE_TYPE)
-              .replaceAll("%properties-agent-class%", SystemPropertiesAgent.class.getSimpleName())
-              .replaceAll("%properties-agent%", Constants.MANAGE_SYSTEM_PROPERTIES_TYPE)                          
+                                .replaceAll("%plugin-agent-class%", PluginManagerAgent.class.getSimpleName())
+                                .replaceAll("%plugin-agent%", Constants.MANAGE_PLUGINS_SERVICE_TYPE)
+                                .replaceAll("%log-agent-class%", LogReaderAgent.class.getSimpleName())
+                                .replaceAll("%log-agent%", Constants.MANAGE_LOGS_SERVICE_TYPE)
+                                .replaceAll("%resource-agent-class%", MemoryWatcherAgent.class.getSimpleName())
+                                .replaceAll("%resource-agent%", Constants.MANAGE_RESOURCES_SERVICE_TYPE)
+                                .replaceAll("%service-agent-class%",
+                                            AdministrationServerConfigurationAgent.class.getSimpleName())
+                                .replaceAll("%service-agent%", Constants.MANAGE_SERVICE_TYPE)
+                                .replaceAll("%properties-agent-class%", SystemPropertiesAgent.class.getSimpleName())
+                                .replaceAll("%properties-agent%", Constants.MANAGE_SYSTEM_PROPERTIES_TYPE)
         );
     }
 }

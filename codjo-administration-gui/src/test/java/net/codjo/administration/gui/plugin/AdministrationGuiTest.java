@@ -1,18 +1,18 @@
 package net.codjo.administration.gui.plugin;
+import javax.swing.JButton;
 import net.codjo.administration.common.ConfigurationOntology;
+import net.codjo.administration.gui.AdministrationGuiContext;
+import net.codjo.gui.toolkit.waiting.WaitingPanel;
+import net.codjo.test.common.LogString;
+import org.uispec4j.Key;
+import org.uispec4j.UISpecTestCase;
+import org.uispec4j.Window;
+
 import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
 import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
 import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
 import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
 import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
-
-import net.codjo.administration.gui.AdministrationGuiContext;
-import net.codjo.gui.toolkit.waiting.WaitingPanel;
-import net.codjo.test.common.LogString;
-import javax.swing.JButton;
-import org.uispec4j.Key;
-import org.uispec4j.UISpecTestCase;
-import org.uispec4j.Window;
 
 public class AdministrationGuiTest extends UISpecTestCase {
     private static final String AUDIT_LOGS_TAB = "Visualisation des logs";
@@ -42,13 +42,16 @@ public class AdministrationGuiTest extends UISpecTestCase {
     public void test_initServices() throws Exception {
         gui.initServices(new String[]{ConfigurationOntology.AUDIT_DESTINATION_DIR + " c:/dev/tmp",
                                       ConfigurationOntology.RECORD_MEMORY_USAGE + " enable",
-                                      ConfigurationOntology.RECORD_HANDLER_STATISTICS + " disable"});
+                                      ConfigurationOntology.RECORD_HANDLER_STATISTICS + " disable",
+                                      ConfigurationOntology.RECORD_JDBC_STATISTICS + " disable"});
 
         assertTrue("c:/dev/tmp".equals(window.getTextBox(ConfigurationOntology.AUDIT_DESTINATION_DIR).getText()));
         JButton button = (JButton)window.getButton(ConfigurationOntology.RECORD_MEMORY_USAGE)
               .getAwtComponent();
         assertTrue("Désactiver".equals(button.getToolTipText()));
         button = (JButton)window.getButton(ConfigurationOntology.RECORD_HANDLER_STATISTICS).getAwtComponent();
+        assertTrue("Activer".equals(button.getToolTipText()));
+        button = (JButton)window.getButton(ConfigurationOntology.RECORD_JDBC_STATISTICS).getAwtComponent();
         assertTrue("Activer".equals(button.getToolTipText()));
     }
 
