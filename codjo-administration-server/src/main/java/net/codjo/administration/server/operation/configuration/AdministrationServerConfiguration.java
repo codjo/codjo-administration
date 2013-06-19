@@ -8,6 +8,9 @@ public interface AdministrationServerConfiguration {
     void setRecordJdbcStatistics(boolean record);
 
 
+    void setJdbcUsersFilter(String userList);
+
+
     void setRecordHandlerStatistics(boolean record);
 
 
