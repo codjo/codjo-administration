@@ -1,14 +1,4 @@
 package net.codjo.administration.server.audit.mad;
-import net.codjo.administration.server.audit.AdministrationLogFile;
-import net.codjo.mad.server.MadConnectionManager;
-import net.codjo.mad.server.MadTransaction;
-import net.codjo.mad.server.handler.Handler;
-import net.codjo.mad.server.handler.HandlerContext;
-import net.codjo.mad.server.handler.HandlerListener;
-import net.codjo.mad.server.util.Chronometer;
-import net.codjo.security.common.api.User;
-import net.codjo.sql.spy.ConnectionSpy;
-import net.codjo.sql.spy.ConnectionSpy.OneQuery;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,16 +6,30 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.codjo.administration.server.audit.AbstractExecutionSpy;
+import net.codjo.administration.server.audit.AdministrationLogFile;
+import net.codjo.mad.server.MadConnectionManager;
+import net.codjo.mad.server.MadTransaction;
+import net.codjo.mad.server.handler.Handler;
+import net.codjo.mad.server.handler.HandlerContext;
+import net.codjo.mad.server.handler.HandlerListener;
+import net.codjo.security.common.api.User;
+import net.codjo.sql.spy.ConnectionSpy;
+import net.codjo.util.time.TimeSource;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.PersistenceException;
 
-public class HandlerExecutionSpy implements HandlerListener {
-    private final AdministrationLogFile administrationLogFile;
+public class HandlerExecutionSpy extends AbstractExecutionSpy implements HandlerListener {
     private final Map<String, Spy> spies = new HashMap<String, Spy>();
 
 
     public HandlerExecutionSpy(AdministrationLogFile administrationLogFile) {
-        this.administrationLogFile = administrationLogFile;
+        this(administrationLogFile, null);
+    }
+
+
+    public HandlerExecutionSpy(AdministrationLogFile administrationLogFile, TimeSource timeSource) {
+        super(administrationLogFile, timeSource);
     }
 
 
@@ -46,31 +50,32 @@ public class HandlerExecutionSpy implements HandlerListener {
     }
 
 
-    private class Spy {
-        private final Chronometer chronometer = new Chronometer();
+    private class Spy extends AbstractSpy {
         private HandlerContextSpy handlerContextSpy;
         private Handler handler;
         private HandlerContext handlerContext;
 
 
         private Spy(Handler handler, HandlerContext handlerContext) {
+            super("HANDLER");
             this.handler = handler;
             this.handlerContext = handlerContext;
         }
 
 
+        @Override
         public void start() {
             handlerContextSpy = new HandlerContextSpy(handlerContext);
             handler.setContext(handlerContextSpy);
 
             logConnections();
-            chronometer.start();
+            super.start();
         }
 
 
+        @Override
         public void stop() {
-            chronometer.stop();
-            logHandler();
+            super.stop();
             handlerContextSpy.logBd();
 
             handler.setContext(handlerContext);
@@ -86,30 +91,18 @@ public class HandlerExecutionSpy implements HandlerListener {
         }
 
 
-        private void logHandler() {
-            log("HANDLER",
-                "Temps Total",
-                chronometer.getStartTime(),
-                chronometer.getDelay() + " ms");
-        }
-
-
-        private void logBd(OneQuery query) {
-            log("HANDLER", "Temps BD", query.getWhen(), query.getTime() + " ms");
-        }
-
-
         private void log(String tag1, long when, Object... cols) {
             log(tag1, "", when, cols);
         }
 
 
-        private void log(String tag1, String tag2, long when, Object... cols) {
+        @Override
+        protected void log(String tag1, String tag2, long when, Object... cols) {
             List<Object> values = new ArrayList<Object>();
             values.add(handler.getId());
             values.add(handlerContext.getUserProfil().getId().encode());
             values.addAll(Arrays.asList(cols));
-            administrationLogFile.write(tag1, tag2, when, values.toArray());
+            super.log(tag1, tag2, when, values.toArray());
         }
 
 
@@ -150,7 +143,7 @@ public class HandlerExecutionSpy implements HandlerListener {
             @Override
             public Connection getConnection() throws SQLException {
                 if (connection == null) {
-                    connection = new ConnectionSpy(handlercontext.getConnection());
+                    connection = new ConnectionSpy(handlercontext.getConnection(), null);
                 }
                 return connection;
             }
@@ -159,7 +152,7 @@ public class HandlerExecutionSpy implements HandlerListener {
             @Override
             public Connection getTxConnection() throws SQLException {
                 if (txConnection == null) {
-                    txConnection = new ConnectionSpy(handlercontext.getTxConnection());
+                    txConnection = new ConnectionSpy(handlercontext.getTxConnection(), null);
                 }
                 return txConnection;
             }
@@ -197,17 +190,10 @@ public class HandlerExecutionSpy implements HandlerListener {
 
             public void logBd() {
                 if (connection != null) {
-                    logBd(connection);
+                    Spy.this.logBd(connection);
                 }
                 if (txConnection != null) {
-                    logBd(txConnection);
-                }
-            }
-
-
-            private void logBd(ConnectionSpy connectionSpy) {
-                for (OneQuery query : connectionSpy.getAllQueries()) {
-                    Spy.this.logBd(query);
+                    Spy.this.logBd(txConnection);
                 }
             }
         }

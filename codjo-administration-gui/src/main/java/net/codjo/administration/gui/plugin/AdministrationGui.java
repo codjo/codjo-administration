@@ -22,11 +22,13 @@ import net.codjo.i18n.gui.TranslationNotifier;
 import net.codjo.mad.gui.framework.GuiContext;
 import net.codjo.mad.gui.i18n.InternationalizationUtil;
 
+import static net.codjo.administration.gui.plugin.ActionType.CHANGE_JDBC_USERS_FILTER;
 import static net.codjo.administration.gui.plugin.ActionType.CHANGE_LOG_DIR;
 import static net.codjo.administration.gui.plugin.ActionType.CLOSE;
 import static net.codjo.administration.gui.plugin.ActionType.DISABLE_SERVICE;
 import static net.codjo.administration.gui.plugin.ActionType.ENABLE_SERVICE;
 import static net.codjo.administration.gui.plugin.ActionType.READ_LOG;
+import static net.codjo.administration.gui.plugin.ActionType.RESTORE_JDBC_USERS_FILTER;
 import static net.codjo.administration.gui.plugin.ActionType.RESTORE_LOG_DIR;
 import static net.codjo.administration.gui.plugin.ActionType.START_PLUGIN;
 import static net.codjo.administration.gui.plugin.ActionType.STOP_PLUGIN;
@@ -99,6 +101,12 @@ class AdministrationGui extends JInternalFrame implements ActionListener, Intern
         }
         else if (RESTORE_LOG_DIR.name().equals(event.getActionCommand())) {
             postGuiEvent(RESTORE_LOG_DIR);
+        }
+        else if (CHANGE_JDBC_USERS_FILTER.name().equals(event.getActionCommand())) {
+            postGuiEvent(CHANGE_JDBC_USERS_FILTER, configurationPanel.getJdbcUsersFilter());
+        }
+        else if (RESTORE_JDBC_USERS_FILTER.name().equals(event.getActionCommand())) {
+            postGuiEvent(RESTORE_JDBC_USERS_FILTER);
         }
     }
 
