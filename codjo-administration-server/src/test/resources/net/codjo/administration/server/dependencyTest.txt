@@ -11,7 +11,11 @@ net.codjo.administration.server.audit
 
 net.codjo.administration.server.audit.jdbc
 	-> net.codjo.administration.server
+	-> net.codjo.administration.server.audit
+	-> net.codjo.administration.server.operation.configuration
+	-> net.codjo.sql.server
 	-> net.codjo.sql.spy
+	-> net.codjo.sql.spy.stats
 	-> net.codjo.test.common
 	-> net.codjo.util.time
 
@@ -81,3 +85,6 @@ net.codjo.administration.server.plugin
 	-> net.codjo.test.common
 	-> org.mockito
 	-> org.mockito.stubbing
+
+net.codjo.sql.server
+	-> net.codjo.database.common.api

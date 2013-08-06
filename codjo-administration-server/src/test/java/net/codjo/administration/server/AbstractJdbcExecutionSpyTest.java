@@ -8,27 +8,33 @@ import net.codjo.database.common.api.DatabaseHelper;
 import net.codjo.database.common.api.JdbcFixture;
 import net.codjo.sql.server.ConnectionPoolConfiguration;
 import net.codjo.test.common.LogString;
-import net.codjo.util.time.TimeSource;
+import net.codjo.util.time.MockTimeSource;
 import org.junit.After;
 import org.junit.Before;
+
+import static net.codjo.administration.server.audit.AdministrationLogFileMock.ALL_COLUMNS;
 /**
  *
  */
 abstract public class AbstractJdbcExecutionSpyTest {
     protected final LogString log = new LogString();
+    protected AdministrationLogFileMock logFile;
+    protected MockTimeSource timeSource;
 
-    private JdbcExecutionSpy spy;
+    protected JdbcExecutionSpy spy;
     private Connection connection;
 
     private ConnectionPoolConfiguration config;
 
 
-    abstract protected TimeSource createTimeSource();
+    abstract protected MockTimeSource createTimeSource();
 
 
     @Before
     public void setUp() throws SQLException {
-        spy = new JdbcExecutionSpy(new AdministrationLogFileMock(log), null, createTimeSource());
+        logFile = new AdministrationLogFileMock(log, ALL_COLUMNS);
+        timeSource = createTimeSource();
+        spy = new JdbcExecutionSpy(logFile, timeSource);
 
         config = createConfiguration();
     }
