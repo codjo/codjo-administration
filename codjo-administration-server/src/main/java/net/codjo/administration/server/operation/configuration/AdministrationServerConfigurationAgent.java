@@ -73,7 +73,7 @@ public class AdministrationServerConfigurationAgent extends Agent {
         this.configuration = configuration;
         this.madServerOperations = madServerOperations;
         this.administrationLogFile = logFile;
-        this.jdbcExecutionSpy = new JdbcExecutionSpy(administrationLogFile, jdbcManager, createTimeSource());
+        this.jdbcExecutionSpy = new JdbcExecutionSpy(administrationLogFile, createTimeSource());
         this.logReader = logReader;
         this.jdbcManager = jdbcManager;
 
@@ -180,18 +180,28 @@ public class AdministrationServerConfigurationAgent extends Agent {
 
     void updateJdbcUsersFilter() {
         jdbcManager.clearConnectionFactories();
+        jdbcManager.clearConnectionPoolListeners();
 
+        LOGGER.debug("updateJdbcUsersFilter: isRecordJdbcStatistics=" + configuration.isRecordJdbcStatistics());
         if (configuration.isRecordJdbcStatistics()) {
             List<String> currentUsers = toList(configuration.getJdbcUsersFilter());
+            LOGGER.debug("updateJdbcUsersFilter: currentUsers=" + (currentUsers.isEmpty() ?
+                                                                   "ALL_USERS" :
+                                                                   configuration.getJdbcUsersFilter()));
+
             if (currentUsers.isEmpty()) {
                 jdbcManager.setDefaultConnectionFactory(jdbcExecutionSpy);
+                jdbcManager.addConnectionPoolListener(jdbcExecutionSpy); // listener for all users
             }
             else {
                 for (String user : currentUsers) {
                     jdbcManager.setConnectionFactory(user, jdbcExecutionSpy);
+                    jdbcManager.addConnectionPoolListener(jdbcExecutionSpy, user);
                 }
             }
         }
+
+        LOGGER.debug("updateJdbcUsersFilter: jdbcManager=" + jdbcManager);
     }
 
 

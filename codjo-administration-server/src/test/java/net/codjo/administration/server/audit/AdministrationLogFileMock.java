@@ -120,31 +120,36 @@ public class AdministrationLogFileMock extends AdministrationLogFile {
 
 
     private String linesToString() {
-        StringBuilder result = new StringBuilder("\nLog content (currentLine=").append(currentLine).append(") :\n");
+        return appendLinesTo(new StringBuilder()).toString();
+    }
+
+
+    public StringBuilder appendLinesTo(StringBuilder buffer) {
+        buffer.append("\nLog content (currentLine=").append(currentLine).append(") :\n");
         int lineNum = 0;
         for (Object[] line : lines) {
             if (lineNum == currentLine) {
-                result.append("-->");
+                buffer.append("-->");
             }
             else {
-                result.append("   ");
+                buffer.append("   ");
             }
-            result.append(lineNum).append(": ");
+            buffer.append(lineNum).append(": ");
 
             boolean first = true;
             for (Object column : line) {
                 if (!first) {
-                    result.append(", ");
+                    buffer.append(", ");
                 }
                 first = false;
 
-                result.append(column);
+                buffer.append(column);
             }
-            result.append('\n');
+            buffer.append('\n');
             lineNum++;
         }
-        result.append("--- end of log content ---");
+        buffer.append("--- end of log content ---");
 
-        return result.toString();
+        return buffer;
     }
 }
