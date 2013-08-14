@@ -1,59 +1,43 @@
 package net.codjo.administration.server.operation.configuration;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import junit.framework.Assert;
 import net.codjo.administration.common.AdministrationOntology;
 import net.codjo.administration.common.ConfigurationOntology;
 import net.codjo.administration.common.Constants;
-import net.codjo.administration.server.AbstractJdbcExecutionSpyTest;
 import net.codjo.administration.server.audit.AdministrationLogFile;
 import net.codjo.administration.server.audit.AdministrationLogFileMock;
 import net.codjo.administration.server.audit.jdbc.JdbcExecutionSpy;
+import net.codjo.administration.server.audit.jdbc.JdbcExecutionSpyTest;
 import net.codjo.administration.server.audit.mad.HandlerExecutionSpy;
 import net.codjo.administration.server.operation.log.DefaultLogReader;
 import net.codjo.agent.AclMessage.Performative;
 import net.codjo.agent.Aid;
-import net.codjo.agent.UserId;
 import net.codjo.agent.protocol.RequestProtocol;
 import net.codjo.agent.test.AgentAssert.Assertion;
 import net.codjo.agent.test.AgentContainerFixture;
+import net.codjo.agent.test.ReceiveMessageStep;
 import net.codjo.agent.test.Story;
 import net.codjo.agent.test.TesterAgentRecorder;
-import net.codjo.mad.common.Log;
 import net.codjo.mad.server.plugin.MadServerOperations;
-import net.codjo.sql.server.ConnectionPool;
-import net.codjo.sql.server.ConnectionPoolConfiguration;
 import net.codjo.sql.server.JdbcManager;
-import net.codjo.sql.spy.stats.Statistics;
 import net.codjo.test.common.Directory.NotDeletedException;
 import net.codjo.test.common.LogString;
 import net.codjo.util.time.MockTimeSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.theories.DataPoint;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static net.codjo.administration.common.AdministrationOntology.CHANGE_JDBC_USERS_FILTER;
 import static net.codjo.administration.common.AdministrationOntology.RESTORE_JDBC_USERS_FILTER;
-import static net.codjo.administration.server.audit.AdministrationLogFile.formatDate;
 import static net.codjo.administration.server.audit.AdministrationLogFileMock.ALL_COLUMNS;
 import static net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent.USER_LIST_SEPARATOR;
 import static net.codjo.agent.MessageTemplate.and;
@@ -65,41 +49,29 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-@RunWith(Theories.class)
 public class AdministrationServerConfigurationAgentTest {
     private static final Logger LOG = Logger.getLogger(AdministrationServerConfigurationAgentTest.class);
 
     private static final String AUDIT_DIR = "c:\\dev\\temp\\test";
-    private static final String USER1 = "user1";
-    private static final String USER2 = "user2";
+    public static final String USER1 = "user1";
+    public static final String USER2 = "user2";
     private static final String USER3 = "user3";
-    private static final String QUERY1 = "SELECT GETDATE()";
-    private static final String QUERY2 = "SELECT 'date:'||CONVERT(VARCHAR(19),GETDATE())";
+    public static final String QUERY1 = "SELECT GETDATE()";
+    public static final String QUERY2 = "SELECT 'date:'||CONVERT(VARCHAR(19),GETDATE())";
     private static final String USERS_FILTER = USER1 + USER_LIST_SEPARATOR + USER2;
-
-    @DataPoint
-    public static QueryPlan QP_SINGLE_CONNECTION = new QueryPlan(new Query(QUERY1, 12L, 0),
-                                                                 new Query(QUERY2, 4L, 0),
-                                                                 new Query(QUERY1, 15L, 0));
-    @DataPoint
-    public static QueryPlan QP_TWO_CONNECTIONS = new QueryPlan(new Query(QUERY1, 12L, 0),
-                                                               new Query(QUERY2, 4L, 0),
-                                                               new Query(QUERY1, 15L, 0),
-                                                               new Query(QUERY2, 23L, 1));
 
     private Story story = new Story();
     private AgentContainerFixture fixture = new AgentContainerFixture();
 
     private LogString log = new LogString();
     private MadServerOperations madServerOperations = mock(MadServerOperations.class);
-    private DefaultAdministrationServerConfiguration configuration;
+    DefaultAdministrationServerConfiguration configuration;
     private final JdbcManager jdbcManager = mock(JdbcManager.class);
     private static final String RESOURCE_AGENT = Constants.MANAGE_RESOURCES_SERVICE_TYPE;
 
@@ -123,7 +95,7 @@ public class AdministrationServerConfigurationAgentTest {
         configuration.setRecordHandlerStatistics(true);
         configuration.setRecordJdbcStatistics(true);
         configuration.setRecordMemoryUsage(true);
-        startServiceManagerAgent();
+        startServiceManagerAgent(true);
 
         story.record()
               .addAssert(new Assertion() {
@@ -132,7 +104,7 @@ public class AdministrationServerConfigurationAgentTest {
                   }
               });
         story.record()
-              .addAssert(verifySetConnectionFactories(true, null));
+              .addAssert(assertSetConnectionFactories(true, null));
         story.record()
               .assertContainsAgent(RESOURCE_AGENT);
 
@@ -140,30 +112,37 @@ public class AdministrationServerConfigurationAgentTest {
     }
 
 
-    private Assertion verifySetConnectionFactories(final boolean setDefault, final String[] usersToSpy) {
-        return verifySetConnectionFactories(setDefault, usersToSpy, 1);
+    public Assertion assertSetConnectionFactories(final boolean setDefault, final String[] usersToSpy) {
+        return assertSetConnectionFactories(setDefault, usersToSpy, 1);
     }
 
 
-    private Assertion verifySetConnectionFactories(final boolean setDefault,
+    private Assertion assertSetConnectionFactories(final boolean setDefault,
                                                    final String[] usersToSpy,
                                                    final int nbCallsToClear) {
         return new Assertion() {
             public void check() throws Throwable {
-                verify(jdbcManager, times(nbCallsToClear)).clearConnectionFactories();
-
-                if ((usersToSpy == null) || (usersToSpy.length == 0)) {
-                    if (setDefault) {
-                        verify(jdbcManager).setDefaultConnectionFactory(isA(JdbcExecutionSpy.class));
-                    }
-                }
-                else {
-                    for (String user : usersToSpy) {
-                        verify(jdbcManager, times(1)).setConnectionFactory(eq(user), any(JdbcExecutionSpy.class));
-                    }
-                }
+                verifySetConnectionFactories(setDefault, usersToSpy, nbCallsToClear);
             }
         };
+    }
+
+
+    public void verifySetConnectionFactories(final boolean setDefault,
+                                             final String[] usersToSpy,
+                                             final int nbCallsToClear) {
+        verify(jdbcManager, times(nbCallsToClear)).clearConnectionFactories();
+
+        if ((usersToSpy == null) || (usersToSpy.length == 0)) {
+            if (setDefault) {
+                verify(jdbcManager).setDefaultConnectionFactory(isA(JdbcExecutionSpy.class));
+            }
+        }
+        else {
+            for (String user : usersToSpy) {
+                verify(jdbcManager, times(1)).setConnectionFactory(eq(user), any(JdbcExecutionSpy.class));
+            }
+        }
     }
 
 
@@ -247,7 +226,7 @@ public class AdministrationServerConfigurationAgentTest {
               .assertReceivedMessage(matchPerformative(Performative.INFORM));
 
         story.record()
-              .addAssert(verifySetConnectionFactories(false, new String[]{USER1, USER2}));
+              .addAssert(assertSetConnectionFactories(false, new String[]{USER1, USER2}));
 
         story.execute();
     }
@@ -395,7 +374,7 @@ public class AdministrationServerConfigurationAgentTest {
 
         // verifications
         verify(agent).updateJdbcUsersFilter();
-        verifySetConnectionFactories(true, newUsers);
+        assertSetConnectionFactories(true, newUsers);
         verifyNoMoreInteractions(agent);
 
         // verify that a singleton spy is used, or null
@@ -413,7 +392,7 @@ public class AdministrationServerConfigurationAgentTest {
     @Test
     public void test_disableService_recordJdbcStatistics() throws Exception {
         configuration.setRecordJdbcStatistics(true);
-        startServiceManagerAgent();
+        startServiceManagerAgent(true);
 
         story.record()
               .startTester("gui-agent")
@@ -427,14 +406,14 @@ public class AdministrationServerConfigurationAgentTest {
               .assertReceivedMessage(matchPerformative(Performative.INFORM));
 
         story.record()
-              .addAssert(verifyAllSpiesAreDisabled(1));
+              .addAssert(assertAllSpiesAreDisabled(2));
 
         story.execute();
     }
 
 
-    private Assertion verifyAllSpiesAreDisabled(int nbCallsToClear) {
-        return verifySetConnectionFactories(false, null, nbCallsToClear);
+    private Assertion assertAllSpiesAreDisabled(int nbCallsToClear) {
+        return assertSetConnectionFactories(false, null, nbCallsToClear);
     }
 
 
@@ -469,7 +448,7 @@ public class AdministrationServerConfigurationAgentTest {
     public void test_changeLogDir() throws Exception {
         final AdministrationLogFile logFile = mock(AdministrationLogFile.class);
 
-        startServiceManagerAgent(logFile);
+        startServiceManagerAgent(logFile, false); //needsInitInteractions=false
 
         final String logDir = "C:\\dev\\tmp";
 
@@ -502,7 +481,7 @@ public class AdministrationServerConfigurationAgentTest {
         final String defaultLogDir = "C:\\dev\\tmp";
         configuration.setDefaultAuditDestinationDir(defaultLogDir);
         configuration.setAuditDestinationDir("anotherLogDir");
-        startServiceManagerAgent(logFile);
+        startServiceManagerAgent(logFile, false); //needsInitInteractions=false
 
         story.record()
               .startTester("gui-agent")
@@ -529,7 +508,7 @@ public class AdministrationServerConfigurationAgentTest {
 
     @Test
     public void test_changeJdbcUsersFilter() throws Exception {
-        doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER + " " + USERS_FILTER, USERS_FILTER, null);
+        doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER + " " + USERS_FILTER, USERS_FILTER, false, null);
     }
 
 
@@ -538,338 +517,122 @@ public class AdministrationServerConfigurationAgentTest {
         configuration.setDefaultJdbcUsersFilter(USERS_FILTER);
         configuration.setJdbcUsersFilter(USER3);
 
-        doTestJdbcUsersFilter(RESTORE_JDBC_USERS_FILTER, USERS_FILTER, null);
+        doTestJdbcUsersFilter(RESTORE_JDBC_USERS_FILTER, USERS_FILTER, false, null);
     }
 
 
-    @Theory
-    public void test_JdbcUsersFilter_spyUser1(QueryPlan user1QueryPlan) throws Exception {
-        test_JdbcUsersFilter(USER1, user1QueryPlan);
+    @Test
+    public void test_JdbcUsersFilter_spyUser1() throws Exception {
+        test_JdbcUsersFilter(USER1, false, true);
+    }
+
+
+    @Test
+    public void test_JdbcUsersFilter_spyUser1_unusedPoolForUser2() throws Exception {
+        test_JdbcUsersFilter(USER1, true, true);
     }
 
 
     @Test
     public void test_JdbcUsersFilter_spyUser2() throws Exception {
-        test_JdbcUsersFilter(USER2, null);
+        test_JdbcUsersFilter(USER2, false, true);
     }
 
 
     @Test
-    public void test_JdbcUsersFilter_noSpy() throws Exception {
-        test_JdbcUsersFilter(null, null);
+    public void test_JdbcUsersFilter_spyAll() throws Exception {
+        test_JdbcUsersFilter(null, false, true);
     }
 
 
-    private void test_JdbcUsersFilter(String userToSpy, QueryPlan user1QueryPlan) throws Exception {
-        Log.info("*** starting test_JdbcUsersFilter " + userToSpy);
+    @Test
+    public void test_JdbcUsersFilter_spyDisabled() throws Exception {
+        test_JdbcUsersFilter(null, false, false);
+    }
+
+
+    private void test_JdbcUsersFilter(String userToSpy, boolean createUnusedPoolForUser2, boolean enabled)
+          throws Exception {
+        LOG.info("*** starting test_JdbcUsersFilter " + userToSpy);
         if (userToSpy == null) {
-            doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER, null, null);
+            // spy all users
+            doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER, null, createUnusedPoolForUser2, enabled);
         }
         else {
-            doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER + " " + userToSpy, userToSpy, user1QueryPlan);
+            // spy only the user given by userToSpy
+            doTestJdbcUsersFilter(CHANGE_JDBC_USERS_FILTER + " " + userToSpy,
+                                  userToSpy,
+                                  createUnusedPoolForUser2,
+                                  enabled);
         }
     }
 
 
-    private void doTestJdbcUsersFilter(String messageContent, final String expectedJdbcUsersFilter, QueryPlan queryPlan)
+    private void doTestJdbcUsersFilter(String messageContent,
+                                       final String expectedJdbcUsersFilter,
+                                       boolean createUnusedPoolForUser2, final Boolean expectServiceActivated)
           throws Exception {
-        queryPlan = (queryPlan == null) ? QP_SINGLE_CONNECTION : queryPlan;
+        if (expectServiceActivated != null) {
+            configuration.setRecordJdbcStatistics(expectServiceActivated);
+        }
 
         final LogString log = new LogString();
         final AdministrationLogFileMock logFile = new AdministrationLogFileMock(log, ALL_COLUMNS);
-        final AdministrationServerConfigurationAgent agent = startServiceManagerAgent(logFile);
-        final String oldFilter = configuration.getJdbcUsersFilter();
+        startServiceManagerAgent(logFile, false); //needsInitInteractions=false
 
         TesterAgentRecorder tar = story.record().startTester("gui-agent");
-        if (messageContent != null) {
-            tar.sendMessage(Performative.REQUEST,
-                            RequestProtocol.REQUEST,
-                            new Aid("bebel"),
-                            messageContent)
-                  .then()
-                  .receiveMessage()
-                  .assertReceivedMessage(and(
-                        matchPerformative(Performative.INFORM),
-                        matchContent((expectedJdbcUsersFilter == null) ?
-                                     "<null/>" :
-                                     "<string>" + expectedJdbcUsersFilter + "</string>")));
+
+        if (expectServiceActivated != null) {
+            addAssertServiceActivated(story, expectServiceActivated);
         }
 
-        Query[] queries = queryPlan.queries;
-        MockTimeSource timeSource = new MockTimeSource();
-        story.record().addAction(new ConnectionAction(logFile, USER1, timeSource, queries));
-        story.execute();
+        if (messageContent != null) {
+            addSendMessageAndCheckReceivedSteps(messageContent, tar, expectedJdbcUsersFilter);
+        }
 
+        addConnectionAction(story, logFile, USER1, JdbcExecutionSpyTest.QP_SINGLE_CONNECTION.getQueries());
+        if (createUnusedPoolForUser2) {
+            addConnectionAction(story, logFile, USER2); // queries.length==0
+        }
+        story.execute();
         Assert.assertEquals(expectedJdbcUsersFilter, configuration.getJdbcUsersFilter());
 
-        //
-        // checks logs for the single connection
-        //
-        Set<Integer> connectionsIds = queryPlan.getConnectionIds();
-        List<String> lines;
-        StringBuilder errors = new StringBuilder();
-        for (int connectionId : connectionsIds) {
-            int nbUniqueQueries = (connectionId == 0) ? 2 : 1; // not generic regarding QueryPlans
-            lines = new ArrayList<String>(Arrays.asList(logFile.extractLines(1 + nbUniqueQueries)));
-            StringBuilder connectionErrors = new StringBuilder();
-
-            Statistics query1Stats = queryPlan.computeStats(QUERY1, connectionId);
-            Statistics query2Stats = queryPlan.computeStats(QUERY2, connectionId);
-
-            if (USER1.equals(expectedJdbcUsersFilter)) {
-                if (query1Stats.getCount() > 0) {
-                    long expectedWhen = (connectionId == 0) ? 0 : 1; // not generic regarding QueryPlans
-                    int spyId = 0;
-                    findUser1ConnectionStats(lines, connectionErrors, QUERY1, query1Stats, expectedWhen, spyId);
-                }
-                if (query2Stats.getCount() > 0) {
-                    long expectedWhen = (connectionId == 0) ? 36 : 93; // not generic regarding QueryPlans
-                    int spyId = connectionId;
-                    findUser1ConnectionStats(lines, connectionErrors, QUERY2, query2Stats, expectedWhen, spyId);
-                }
-            }
-            long expectedWhen = (connectionId == 0) ? 0 : 78; // not generic regarding QueryPlans
-            int value = (connectionId == 0) ? 0 : 1; // not generic regarding QueryPlans
-            findLine(lines,
-                     "write\\(JDBC, Temps Total, " + formatDate(expectedWhen) + ", " + value + ", " + USER1 + ", .*\\)",
-                     true,
-                     connectionErrors);
-
-            if (connectionErrors.length() > 0) {
-                errors.append("=== Errors on connection #" + connectionId + " ===\n");
-                errors.append(connectionErrors);
-            }
+        InOrder orderedExecution = Mockito.inOrder(jdbcManager);
+        orderedExecution.verify(jdbcManager, times(1)).clearConnectionFactories();
+        orderedExecution.verify(jdbcManager, times(1)).clearConnectionPoolListeners();
+        ArgumentCaptor<JdbcExecutionSpy> argument = ArgumentCaptor.forClass(JdbcExecutionSpy.class);
+        if (spyAllUsers()) {
+            orderedExecution.verify(jdbcManager, times(1)).setDefaultConnectionFactory(argument.capture());
+            orderedExecution.verify(jdbcManager, times(1)).addConnectionPoolListener(argument.capture());
         }
-        failOnErrors(errors);
-
-        //
-        // checks logs for user's ConnectionPool (compound of connections)
-        //
-        logFile.assertLine(
-              "write(JDBC, Aggregated statistics for user '" + USER1 + "', 2 unique queries)");
-        logFile.assertLine("write(JDBC, Aggregated statistics, Order (highest Total time first), "
-                           + "User, Min time, Max time, Total time, Count, Query)");
-
-        lines = new ArrayList<String>(Arrays.asList(logFile.extractLines(2)));
-
-        errors.setLength(0); // clear
-        if (USER1.equals(expectedJdbcUsersFilter)) {
-            findUser1ConnectionPoolStats(lines, errors, 0, QUERY1, queryPlan.computeStats(
-                  QUERY1, null));
-            findUser1ConnectionPoolStats(lines, errors, 1, QUERY2, queryPlan.computeStats(
-                  QUERY2, null));
-        }
-        failOnErrors(errors);
-
-        logFile.assertNoMoreLines();
+        verifyUserIsSpiedWhenEnabled(orderedExecution, argument, USER1);
+        verifyUserIsSpiedWhenEnabled(orderedExecution, argument, USER2);
+        verifySingleInstanceOrNone(argument);
+        orderedExecution.verifyNoMoreInteractions();
     }
 
 
-    private static class QueryPlan {
-        private final Query[] queries;
-
-
-        public QueryPlan(Query... queries) {
-            this.queries = queries;
-        }
-
-
-        public Set<Integer> getConnectionIds() {
-            Set<Integer> result = new TreeSet<Integer>();
-            for (Query query : queries) {
-                result.add(query.connectionId);
-            }
-            return result;
-        }
-
-
-        public Statistics computeStats(String query1, Integer connectionId)
-              throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-            Statistics result = new Statistics();
-
-            for (int i = 0; i < queries.length; i++) {
-                Query query = queries[i];
-                if (query.query.equals(query1) && ((connectionId == null) || (connectionId.intValue()
-                                                                              == query.connectionId))) {
-                    result.inc();
-                    result.addTime(queries[i].time);
-                }
-            }
-
-            return result;
-        }
-    }
-
-    static class Query {
-        private final String query;
-        private final long time;
-        final int connectionId;
-
-
-        public Query(String query, long time, int connectionId) {
-            this.query = query;
-            this.time = time;
-            this.connectionId = connectionId;
+    private void verifySingleInstanceOrNone(ArgumentCaptor<JdbcExecutionSpy> argument) {
+        for (int i = 1; i < argument.getAllValues().size(); i++) {
+            assertEquals(argument.getAllValues().get(i - 1), argument.getAllValues().get(i));
         }
     }
 
 
-    private void failOnErrors(StringBuilder errors) {
-        if (errors.length() > 0) {
-            fail("There was errors:\n" + errors.toString());
+    private void verifyUserIsSpiedWhenEnabled(InOrder orderedExecution,
+                                              ArgumentCaptor<JdbcExecutionSpy> argument,
+                                              String user) {
+        if (spyUser(user)) {
+            if (!spyAllUsers()) {
+                orderedExecution.verify(jdbcManager, times(1)).setConnectionFactory(eq(user), argument.capture());
+                orderedExecution.verify(jdbcManager, times(1)).addConnectionPoolListener(argument.capture(), eq(user));
+            }
         }
     }
 
 
-    private void findUser1ConnectionPoolStats(List<String> lines, StringBuilder errors, int order, String query,
-                                              Statistics queryStats) {
-        findLine(lines,
-                 "write(JDBC, Aggregated statistics, " + order + ", " + USER1 +
-                 ", " + queryStats.getMinTime() + ", " + queryStats.getMaxTime() + ", " + queryStats.getTime() +
-                 ", " + queryStats.getCount() + ", " + query + ")",
-                 false,
-                 errors);
-    }
-
-
-    private void findUser1ConnectionStats(List<String> lines,
-                                          StringBuilder errors,
-                                          String query,
-                                          Statistics queryStats, long expectedWhen, int expectedSpyId) {
-        String expectedDateString = Matcher.quoteReplacement(AdministrationLogFile.formatDate(expectedWhen));
-        findLine(lines,
-                 "write\\(JDBC, Temps BD, " + expectedDateString + ", " + expectedSpyId + ", " + USER1 + ", "
-                 + escapeRegExpChars(query)
-                 + ", "
-                 + queryStats.getCount() + ", " + queryStats.getTime() + " ms\\)",
-                 true,
-                 errors);
-    }
-
-
-    private static String escapeRegExpChars(String query) {
-        query = query.replaceAll("\\|", Matcher.quoteReplacement("\\|"));
-        query = query.replaceAll("\\(", Matcher.quoteReplacement("\\("));
-        query = query.replaceAll("\\)", Matcher.quoteReplacement("\\)"));
-        return query;
-    }
-
-
-    private static void findLine(List<String> lines, String expectedLine, boolean isPattern, StringBuilder errors) {
-        int index = -1;
-        Pattern pattern = isPattern ? Pattern.compile(expectedLine) : null;
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i);
-            boolean match;
-            if (isPattern) {
-                Matcher matcher = pattern.matcher(line);
-                match = matcher.matches();
-            }
-            else {
-                match = line.equals(expectedLine);
-            }
-
-            if (match) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index < 0) {
-            if (errors.length() == 0) {
-                errors.append("Actual lines:\n");
-                for (int i = 0; i < lines.size(); i++) {
-                    errors.append("\tLine L+").append(i).append(": ").append(lines.get(i)).append('\n');
-                }
-
-                errors.append("Expected lines:\n");
-            }
-            if (isPattern) {
-                errors.append("\tLine with pattern '");
-            }
-            else {
-                errors.append("\tLine '");
-            }
-            errors.append(expectedLine).append("' not found\n");
-        }
-        else {
-            lines.remove(index);
-        }
-    }
-
-
-    private class ConnectionAction implements AgentContainerFixture.Runnable {
-        private final AdministrationLogFile logFile;
-        private final String applicationUser;
-        private final Query[] queries;
-        private final MockTimeSource timeSource;
-
-
-        public ConnectionAction(AdministrationLogFile logFile, String applicationUser, MockTimeSource timeSource,
-                                Query... queries) {
-            this.logFile = logFile;
-            this.applicationUser = applicationUser;
-            this.queries = queries;
-            this.timeSource = timeSource;
-        }
-
-
-        public final void run() throws Exception {
-            try {
-                // simulate some activity
-                String password = "password";
-                final UserId userId = UserId.createId(applicationUser, password);
-                ConnectionPoolConfiguration config = AbstractJdbcExecutionSpyTest.createConfiguration();
-                JdbcManager manager = new JdbcManager(config);
-                manager.setDefaultConnectionFactory(new JdbcExecutionSpy(logFile, manager, timeSource));
-
-                ConnectionPool pool = manager.createPool(userId, config.getUser(), config.getPassword());
-                Map<Integer, Connection> connections = new java.util.HashMap<Integer, Connection>();
-                try {
-
-                    timeSource.reset();
-                    timeSource.setAutoIncrement(0);
-
-                    for (Query query : queries) {
-                        Connection connection = connections.get(query.connectionId);
-                        if (connection == null) {
-                            connection = pool.getConnection();
-                            connections.put(query.connectionId, connection);
-                        }
-
-                        LOG.info("Connection #" + query.connectionId + ": Executing query " + query.query);
-                        executeQuery(connection, query);
-                    }
-
-                    timeSource.setAutoIncrement(0);
-                }
-                finally {
-                    int[] connectionIds = new int[connections.size()];
-                    for (int connectionId : new TreeSet<Integer>(connections.keySet())) {
-                        LOG.debug("closing connection #" + connectionId);
-                        pool.releaseConnection(connections.get(connectionId));
-                    }
-
-                    // this will also close the connections
-                    manager.destroyPool(userId);
-                }
-            }
-            catch (Exception e) {
-                Log.error(e.getMessage(), e);
-                throw e;
-            }
-        }
-
-
-        private void executeQuery(Connection connection, Query query) throws SQLException {
-            Statement statement = connection.createStatement();
-
-            timeSource.setAutoIncrement(query.time);
-            ResultSet resultSet = statement.executeQuery(query.query);
-
-            statement.close();
-            resultSet.close();
-        }
+    private boolean spyAllUsers() {
+        return configuration.isRecordJdbcStatistics() && StringUtils.isBlank(configuration.getJdbcUsersFilter());
     }
 
 
@@ -878,7 +641,7 @@ public class AdministrationServerConfigurationAgentTest {
         configuration.setRecordHandlerStatistics(true);
         configuration.setRecordJdbcStatistics(true);
         configuration.setRecordMemoryUsage(true);
-        startServiceManagerAgent();
+        startServiceManagerAgent(true); //needsInitInteractions=true
 
         story.record()
               .addAssert(new Assertion() {
@@ -887,7 +650,7 @@ public class AdministrationServerConfigurationAgentTest {
                   }
               });
         story.record()
-              .addAssert(verifySetConnectionFactories(true, null));
+              .addAssert(assertSetConnectionFactories(true, null));
         story.record()
               .assertContainsAgent(RESOURCE_AGENT);
 
@@ -900,7 +663,7 @@ public class AdministrationServerConfigurationAgentTest {
                   }
               });
         story.record()
-              .addAssert(verifyAllSpiesAreDisabled(2));
+              .addAssert(assertAllSpiesAreDisabled(2));
         story.record()
               .assertNumberOfAgentWithService(0, RESOURCE_AGENT);
         story.record()
@@ -920,16 +683,32 @@ public class AdministrationServerConfigurationAgentTest {
 
 
     private AdministrationServerConfigurationAgent startServiceManagerAgent() throws Exception {
-        return startServiceManagerAgent(new AdministrationLogFile());
+        return startServiceManagerAgent(false); //needsInitInteractions=false
     }
 
 
-    private AdministrationServerConfigurationAgent startServiceManagerAgent(AdministrationLogFile logFile) {
+    private AdministrationServerConfigurationAgent startServiceManagerAgent(boolean needsInitInteractions)
+          throws Exception {
+        return startServiceManagerAgent(new AdministrationLogFile(), needsInitInteractions);
+    }
+
+
+    AdministrationServerConfigurationAgent startServiceManagerAgent(AdministrationLogFile logFile,
+                                                                    boolean needsInitInteractions) {
         AdministrationServerConfigurationAgent agent = createAgent(logFile);
         story.record()
               .startAgent("bebel", agent);
         story.record()
               .assertAgentWithService(new String[]{"bebel"}, Constants.MANAGE_SERVICE_TYPE);
+
+        if (!needsInitInteractions) {
+            story.record().addAction(new AgentContainerFixture.Runnable() {
+                public void run() {
+                    // clear interactions with the mock at initialization time
+                    Mockito.reset(jdbcManager);
+                }
+            });
+        }
         return agent;
     }
 
@@ -942,9 +721,71 @@ public class AdministrationServerConfigurationAgentTest {
                                                                                                   logFile,
                                                                                                   logReader,
                                                                                                   jdbcManager);
-        AdministrationServerConfigurationAgent result = spy(agent);
-        doCallRealMethod().when(result).updateJdbcUsersFilter();
-        return result;
+        return spy(agent);
+    }
+
+
+    private void addAssertServiceActivated(Story story,
+                                           final Boolean expectServiceActivated) {
+        story.record().addAssert(new Assertion() {
+            public void check() throws Throwable {
+                assertEquals("recordJdbcStatistics",
+                             expectServiceActivated,
+                             configuration.isRecordJdbcStatistics());
+            }
+
+
+            @Override
+            public String toString() {
+                return "assertRecordJdbcStatistics(enabled=" + expectServiceActivated + ")";
+            }
+        });
+    }
+
+
+    private boolean spyUser(String user) {
+        String filter = configuration.getJdbcUsersFilter();
+        return configuration.isRecordJdbcStatistics() && (spyAllUsers() || user.equals(filter));
+    }
+
+
+    private void addConnectionAction(Story story,
+                                     final AdministrationLogFileMock logFile,
+                                     final String user,
+                                     final Query... queries) {
+        final MockTimeSource timeSource = new MockTimeSource();
+        story.record().addAction(new AgentContainerFixture.Runnable() {
+            public void run() throws Exception {
+                new ConnectionAction(logFile, user, timeSource, queries).call();
+            }
+        });
+    }
+
+
+    private void addSendMessageAndCheckReceivedSteps(String messageContent,
+                                                     TesterAgentRecorder tar,
+                                                     String expectedJdbcUsersFilter) {
+        ReceiveMessageStep step = tar.sendMessage(Performative.REQUEST,
+                                                  RequestProtocol.REQUEST,
+                                                  new Aid("bebel"),
+                                                  messageContent)
+              .then()
+              .receiveMessage();
+        step.assertReceivedMessage(and(
+              matchPerformative(Performative.INFORM),
+              matchContent((expectedJdbcUsersFilter == null) ?
+                           "<null/>" :
+                           "<string>" + expectedJdbcUsersFilter + "</string>")));
+    }
+
+
+    public void failOnErrors(Errors errors, AdministrationLogFileMock logFile) {
+        if (!errors.isEmpty()) {
+            StringBuilder buffer = new StringBuilder("There was errors:\n");
+            errors.appendTo(buffer);
+            logFile.appendLinesTo(buffer);
+            fail(buffer.toString());
+        }
     }
 }
 

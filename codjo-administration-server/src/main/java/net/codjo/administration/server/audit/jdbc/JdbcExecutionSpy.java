@@ -15,7 +15,6 @@ import net.codjo.sql.server.ConnectionPool;
 import net.codjo.sql.server.ConnectionPoolConfiguration;
 import net.codjo.sql.server.ConnectionPoolListener;
 import net.codjo.sql.server.DefaultConnectionFactory;
-import net.codjo.sql.server.JdbcManager;
 import net.codjo.sql.spy.ConnectionSpy;
 import net.codjo.sql.spy.ConnectionSpy.OneQuery;
 import net.codjo.util.time.TimeSource;
@@ -32,19 +31,14 @@ public class JdbcExecutionSpy extends AbstractExecutionSpy implements Connection
     private final Map<Integer, Spy> spies = new HashMap<Integer, Spy>();
 
 
-    public JdbcExecutionSpy(AdministrationLogFile administrationLogFile, JdbcManager jdbcManager) {
-        this(administrationLogFile, jdbcManager, null);
+    public JdbcExecutionSpy(AdministrationLogFile administrationLogFile) {
+        this(administrationLogFile, null);
     }
 
 
     public JdbcExecutionSpy(AdministrationLogFile administrationLogFile,
-                            JdbcManager jdbcManager,
                             TimeSource timeSource) {
         super(administrationLogFile, timeSource);
-
-        if (jdbcManager != null) {
-            jdbcManager.addConnectionPoolListener(this);
-        }
     }
 
 
