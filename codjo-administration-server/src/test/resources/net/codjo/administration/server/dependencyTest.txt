@@ -15,7 +15,6 @@ net.codjo.administration.server.audit.jdbc
 	-> net.codjo.administration.server.operation.configuration
 	-> net.codjo.sql.server
 	-> net.codjo.sql.spy
-	-> net.codjo.sql.spy.stats
 	-> net.codjo.test.common
 	-> net.codjo.util.time
 
@@ -50,7 +49,6 @@ net.codjo.administration.server.operation.configuration
 	-> net.codjo.mad.server.handler
 	-> net.codjo.mad.server.plugin
 	-> net.codjo.sql.server
-	-> net.codjo.sql.spy.stats
 	-> net.codjo.test.common
 	-> net.codjo.util.time
 	-> org.apache.commons.lang

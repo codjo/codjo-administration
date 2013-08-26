@@ -6,11 +6,11 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import net.codjo.administration.server.AbstractJdbcExecutionSpyTest;
 import net.codjo.administration.server.audit.AdministrationLogFile;
 import net.codjo.administration.server.audit.jdbc.JdbcExecutionSpy;
 import net.codjo.agent.UserId;
+import net.codjo.agent.test.AgentContainerFixture;
 import net.codjo.mad.common.Log;
 import net.codjo.sql.server.ConnectionPool;
 import net.codjo.sql.server.ConnectionPoolConfiguration;
@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 /**
  *
  */
-public class ConnectionAction implements Callable<Object> {
+public class ConnectionAction implements AgentContainerFixture.Runnable {
     private static final Logger LOG = Logger.getLogger(ConnectionAction.class);
 
     private final AdministrationLogFile logFile;
@@ -38,7 +38,7 @@ public class ConnectionAction implements Callable<Object> {
     }
 
 
-    public final Object call() throws Exception {
+    public final void run() throws Exception {
         try {
             // simulate some activity
             String password = "password";
@@ -81,8 +81,6 @@ public class ConnectionAction implements Callable<Object> {
             Log.error(e.getMessage(), e);
             throw e;
         }
-
-        return null;
     }
 
 

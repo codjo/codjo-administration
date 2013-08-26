@@ -85,7 +85,7 @@ public class JdbcExecutionSpy extends AbstractExecutionSpy implements Connection
 
         Comparator<OneQuery> comparator = new Comparator<OneQuery>() {
             public int compare(OneQuery o1, OneQuery o2) {
-                int result = (int)(o1.getTime() - o2.getTime());
+                int result = (int)(o1.getTotalTime() - o2.getTotalTime());
                 return -result; // reverse order (=max time first)
             }
         };
@@ -100,7 +100,7 @@ public class JdbcExecutionSpy extends AbstractExecutionSpy implements Connection
                                                    applicationUser,
                                                    query.getMinTime(),
                                                    query.getMaxTime(),
-                                                   query.getTime(),
+                                                   query.getTotalTime(),
                                                    query.getCount(),
                                                    query.getSql());
             order++;
