@@ -19,8 +19,8 @@ import net.codjo.administration.server.operation.configuration.QueryPlan;
 import net.codjo.sql.server.ConnectionPool;
 import net.codjo.sql.server.ConnectionPoolFactory;
 import net.codjo.sql.spy.ConnectionSpy;
-import net.codjo.sql.spy.stats.Statistics;
 import net.codjo.util.time.MockTimeSource;
+import net.codjo.util.time.Statistics;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoint;
@@ -273,7 +273,8 @@ public class JdbcExecutionSpyTest extends AbstractJdbcExecutionSpyTest {
                                              Statistics queryStats, String user) {
         assertLinePresent(lines,
                           "write(JDBC, Aggregated statistics, " + order + ", " + user +
-                          ", " + queryStats.getMinTime() + ", " + queryStats.getMaxTime() + ", " + queryStats.getTime()
+                          ", " + queryStats.getMinTime() + ", " + queryStats.getMaxTime() + ", "
+                          + queryStats.getTotalTime()
                           +
                           ", " + queryStats.getCount() + ", " + query + ")",
                           false,
@@ -290,7 +291,7 @@ public class JdbcExecutionSpyTest extends AbstractJdbcExecutionSpyTest {
                           "write\\(JDBC, Temps BD, " + expectedDateString + ", " + expectedSpyId + ", " + USER1 + ", "
                           + escapeRegExpChars(query)
                           + ", "
-                          + queryStats.getCount() + ", " + queryStats.getTime() + " ms\\)",
+                          + queryStats.getCount() + ", " + queryStats.getTotalTime() + " ms\\)",
                           true,
                           errors);
     }

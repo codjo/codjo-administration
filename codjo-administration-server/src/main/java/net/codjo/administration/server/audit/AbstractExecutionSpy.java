@@ -54,7 +54,7 @@ abstract public class AbstractExecutionSpy {
 
         protected final void logBd(ConnectionSpy connectionSpy) {
             for (OneQuery query : connectionSpy.getAllQueries()) {
-                log(type, "Temps BD", query.getWhen(), query.getSql(), query.getCount(), query.getTime() + " ms");
+                log(type, "Temps BD", query.getWhen(), query.getSql(), query.getCount(), query.getTotalTime() + " ms");
             }
         }
 

@@ -754,11 +754,7 @@ public class AdministrationServerConfigurationAgentTest {
                                      final String user,
                                      final Query... queries) {
         final MockTimeSource timeSource = new MockTimeSource();
-        story.record().addAction(new AgentContainerFixture.Runnable() {
-            public void run() throws Exception {
-                new ConnectionAction(logFile, user, timeSource, queries).call();
-            }
-        });
+        story.record().addAction(new ConnectionAction(logFile, user, timeSource, queries));
     }
 
 
