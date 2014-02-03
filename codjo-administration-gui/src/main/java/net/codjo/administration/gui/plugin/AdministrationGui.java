@@ -16,6 +16,7 @@ import net.codjo.agent.GuiAgent;
 import net.codjo.agent.GuiEvent;
 import net.codjo.gui.toolkit.HelpButton;
 import net.codjo.gui.toolkit.LabelledItemPanel;
+import net.codjo.gui.toolkit.util.GuiUtil;
 import net.codjo.gui.toolkit.waiting.WaitingPanel;
 import net.codjo.i18n.gui.InternationalizableContainer;
 import net.codjo.i18n.gui.TranslationNotifier;
@@ -111,12 +112,12 @@ class AdministrationGui extends JInternalFrame implements ActionListener, Intern
     }
 
 
-    public synchronized void lockGui() {
+    public void lockGui() {
         guiLocker.lock();
     }
 
 
-    public synchronized void unlockGui() {
+    public void unlockGui() {
         guiLocker.unlock();
     }
 
@@ -269,21 +270,33 @@ class AdministrationGui extends JInternalFrame implements ActionListener, Intern
         }
 
 
-        public synchronized void lock() {
-            if (counter == 0) {
-                waitingPanel.setVisible(true);
-                waitingPanel.startAnimation();
-            }
-            counter++;
+        public void lock() {
+            // manage our state and waitingPanel in EDT to avoid need for synchronization
+            // and potential deadlocks
+            GuiUtil.runInSwingThread(new Runnable() {
+                public void run() {
+                    if (counter == 0) {
+                        waitingPanel.setVisible(true);
+                        waitingPanel.startAnimation();
+                    }
+                    counter++;
+                }
+            });
         }
 
 
-        public synchronized void unlock() {
-            counter--;
-            if (counter == 0) {
-                waitingPanel.stopAnimation();
-                waitingPanel.setVisible(false);
-            }
+        public void unlock() {
+            // manage our state and waitingPanel in EDT to avoid need for synchronization
+            // and potential deadlocks
+            GuiUtil.runInSwingThread(new Runnable() {
+                public void run() {
+                    counter--;
+                    if (counter == 0) {
+                        waitingPanel.stopAnimation();
+                        waitingPanel.setVisible(false);
+                    }
+                }
+            });
         }
     }
 }
