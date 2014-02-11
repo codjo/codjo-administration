@@ -1,5 +1,6 @@
 package net.codjo.administration.gui.plugin;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 import net.codjo.administration.common.ConfigurationOntology;
 import net.codjo.administration.gui.AdministrationGuiContext;
 import net.codjo.gui.toolkit.waiting.WaitingPanel;
@@ -73,6 +74,13 @@ public class AdministrationGuiTest extends UISpecTestCase {
         gui.lockGui();
         gui.unlockGui();
         gui.unlockGui();
+
+        // The following empty task will be processed
+        // after lockGui and unlockGui have finished their work in EDT.
+        SwingUtilities.invokeAndWait(new Runnable() {
+            public void run() {
+            }
+        });
 
         log.assertContent("startAnimation(), stopAnimation()");
     }
