@@ -1,7 +1,4 @@
 package net.codjo.administration.server.operation.configuration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import junit.framework.Assert;
 import net.codjo.administration.common.AdministrationOntology;
 import net.codjo.administration.common.ConfigurationOntology;
@@ -36,24 +33,22 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static net.codjo.administration.common.AdministrationOntology.CHANGE_JDBC_USERS_FILTER;
 import static net.codjo.administration.common.AdministrationOntology.RESTORE_JDBC_USERS_FILTER;
 import static net.codjo.administration.server.audit.AdministrationLogFileMock.ALL_COLUMNS;
 import static net.codjo.administration.server.operation.configuration.AdministrationServerConfigurationAgent.USER_LIST_SEPARATOR;
-import static net.codjo.agent.MessageTemplate.and;
-import static net.codjo.agent.MessageTemplate.matchContent;
-import static net.codjo.agent.MessageTemplate.matchPerformative;
+import static net.codjo.agent.MessageTemplate.*;
 import static org.apache.commons.lang.StringUtils.join;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 public class AdministrationServerConfigurationAgentTest {
     private static final Logger LOG = Logger.getLogger(AdministrationServerConfigurationAgentTest.class);
@@ -78,6 +73,7 @@ public class AdministrationServerConfigurationAgentTest {
 
     @Before
     public void setUp() throws NotDeletedException {
+        story.setTimeout(3000L);
         fixture.doSetUp();
         configuration = new DefaultAdministrationServerConfiguration();
         log.clear();
